@@ -1,0 +1,19 @@
+{
+    "address": "202.50.45.116", 
+    "agent": {
+        "exec": "rtuagent-0.1-py2.7.egg --config \"%c\" --sub \"%s\" --pub \"%p\""
+    }, 
+    "agent_id": "1RTU1a3d5021c398", 
+    "api": "classAPI_Dummyvav_rtu", 
+    "building_name": "bemoss", 
+    "db_database": "bemossdb", 
+    "db_host": "localhost", 
+    "db_password": "admin", 
+    "db_port": "5432", 
+    "db_user": "admin", 
+    "device_monitor_time": 20, 
+    "model": "M1000", 
+    "type": "rtu", 
+    "vendor": "Prolon", 
+    "zone_id": 999
+}

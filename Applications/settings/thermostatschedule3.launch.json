@@ -1,0 +1,144 @@
+{"thermostat": {
+        "Wifithermostat1": {
+            "active": [
+                "everyday", 
+                "holiday"
+            ], 
+            "inactive": [
+                "weekdayweekend"
+            ], 
+            "schedulers": {
+                "everyday": {
+                    "friday": {
+                        "cool": [], 
+                        "heat": []
+                    }, 
+                    "monday": {
+                        "cool": [
+                            {
+                                "at": "300", 
+                                "id": "1", 
+                                "nickname": "Period1", 
+                                "setpoint": "70"
+                            }, 
+                            {
+                                "at": "360", 
+                                "id": "2", 
+                                "nickname": "Period2", 
+                                "setpoint": "80"
+                            }, 
+                            {
+                                "at": "420", 
+                                "id": "3", 
+                                "nickname": "Period3", 
+                                "setpoint": "85"
+                            }, 
+                            {
+                                "at": "480", 
+                                "id": "5", 
+                                "nickname": "Period5", 
+                                "setpoint": "90"
+                            }, 
+                            {
+                                "at": "540", 
+                                "id": "6", 
+                                "nickname": "Period6", 
+                                "setpoint": "85"
+                            }, 
+                            {
+                                "at": "600", 
+                                "id": "7", 
+                                "nickname": "Period7", 
+                                "setpoint": "75"
+                            }, 
+                            {
+                                "at": "660", 
+                                "id": "8", 
+                                "nickname": "Period8", 
+                                "setpoint": "70"
+                            }
+                        ], 
+                        "heat": [
+                            {
+                                "at": "0", 
+                                "id": "2", 
+                                "nickname": "Period2", 
+                                "setpoint": "65"
+                            }, 
+                            {
+                                "at": "30", 
+                                "id": "3", 
+                                "nickname": "Period3", 
+                                "setpoint": "75"
+                            }, 
+                            {
+                                "at": "60", 
+                                "id": "4", 
+                                "nickname": "Period4", 
+                                "setpoint": "80"
+                            }, 
+                            {
+                                "at": "120", 
+                                "id": "5", 
+                                "nickname": "Period5", 
+                                "setpoint": "85"
+                            }, 
+                            {
+                                "at": "150", 
+                                "id": "6", 
+                                "nickname": "Period6", 
+                                "setpoint": "80"
+                            }, 
+                            {
+                                "at": "180", 
+                                "id": "7", 
+                                "nickname": "Period7", 
+                                "setpoint": "70"
+                            }, 
+                            {
+                                "at": "240", 
+                                "id": "8", 
+                                "nickname": "Period8", 
+                                "setpoint": "65"
+                            }
+                        ]
+                    }, 
+                    "saturday": {
+                        "cool": [], 
+                        "heat": []
+                    }, 
+                    "sunday": {
+                        "cool": [
+                            {
+                                "at": "1410", 
+                                "id": "1", 
+                                "nickname": "Period1", 
+                                "setpoint": "65"
+                            }
+                        ], 
+                        "heat": [
+                            {
+                                "at": "1410", 
+                                "id": "1", 
+                                "nickname": "Period1", 
+                                "setpoint": "75"
+                            }
+                        ]
+                    }, 
+                    "thursday": {
+                        "cool": [], 
+                        "heat": []
+                    }, 
+                    "tuesday": {
+                        "cool": [], 
+                        "heat": []
+                    }, 
+                    "wednesday": {
+                        "cool": [], 
+                        "heat": []
+                    }
+                }
+            }
+        }
+    }
+}

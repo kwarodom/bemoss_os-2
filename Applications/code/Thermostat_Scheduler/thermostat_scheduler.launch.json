@@ -1,0 +1,7 @@
+{
+    "agent": {
+        "exec": "thermostat_scheduleragent-0.1-py2.7.egg --config \"%c\" --sub \"%s\" --pub \"%p\""
+    },
+    "agent_id": "Wifithermostat1",
+    "type": "thermostat_scheduler"
+}
