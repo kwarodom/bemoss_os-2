@@ -56,11 +56,22 @@ def init():
     except IOError as er:
         print "creating a new cassandra_settings file"
         cluster_name = raw_input("Enter a unique name for cassandra cluster-name: ")
+        if cluster_name=='':
+            cluster_name = 'bemosscluster'
+            print 'Using default clustername: '+cluster_name
         db_username = raw_input("Enter database username: ")
+        if db_username=='':
+            db_username='bemoss'
+            print 'Using default username: '+db_username
         db_password = raw_input("Enter database password: ")
-        password2 = raw_input("Enter password again: ")
-        while password2 != db_password:
-            password2 = raw_input("Password doesn't match. Input again: ")
+        if db_password=='':
+            db_password='bemoss'
+            print 'Using default password: '+db_password
+        else:
+            password2 = raw_input("Enter password again: ")
+            while password2 != db_password:
+                password2 = raw_input("Password doesn't match. Input again: ")
+                #TODO have some exit condition
         ip_address = getIPs()[-1]
         casSettingsFile = open(os.path.expanduser("~")+"/workspace/bemoss_os/cassandra_settings.txt",'w')
         contents="""cluster_name: '%s'
