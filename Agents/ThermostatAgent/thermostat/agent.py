@@ -178,7 +178,10 @@ def ThermostatAgent(config_path, **kwargs):
             self._override = True
             self.get_sch_day = datetime.datetime.now().day
             # Get the schedule from device for the first time.
-            Thermostat.getDeviceSchedule()
+            try:
+                Thermostat.getDeviceSchedule()
+            except:
+                print('Failure @ thermostatagent init getDeviceSchedule.')
             # 2. setup connection with db -> Connect to bemossdb database
             try:
                 self.con = psycopg2.connect(host=db_host, port=db_port, database=db_database, user=db_user,
