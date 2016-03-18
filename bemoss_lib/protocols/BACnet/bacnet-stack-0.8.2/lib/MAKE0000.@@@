@@ -1,0 +1,14 @@
+ -Ic:\bc5\include -I..\include  -I..\ports\win32  -I..\demo\object  -I..\demo\handler  -DPRINT_ENABLED=1 -DBACFILE -DBACAPP_ALL -DBACDL_BIP=1 -DUSE_INADDR=1
+ -c
+ -y
+ -v
+ -w+
+ -O2
+ -WM
+ -w-aus
+ -w-sig
+
+
+
+
+
