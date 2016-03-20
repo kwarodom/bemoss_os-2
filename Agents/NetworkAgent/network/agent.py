@@ -156,7 +156,8 @@ class NetworkAgent(PublishMixin, BaseAgent):
                                         password=db_password)
             self.cur = self.con.cursor()  # open a cursor to perfomm database operations
             print("{} connects to the database name {} successfully".format(self.agent_id, db_database))
-        except:
+        except Exception as er:
+            print er
             print("ERROR: {} fails to connect to the database name {}".format(self.agent_id, db_database))
         self.cur.execute("SELECT associated_zone, mac_address FROM "+db_table_node_info+" WHERE ip_address=%s", (self.host_ip_address,))
         if self.cur.rowcount != 0:
