@@ -298,7 +298,7 @@ def MultiBuildingAgent(config_path=None, **kwargs):
         def add_subscription(self, building, topic, cookie=None):
             '''Add external building subscription.'''
             sock = self.subs.get(building)
-            _launch_file = os.path.join(Agents_DIR+"MultiBuilding/multibuildingagent2.launch.json")
+            _launch_file = os.path.join(Agents_DIR+"MultiBuilding/multibuildingagent.launch.json")
             with open(_launch_file, 'r') as f:
                 self.multi_node_data = json.load(f)
             self.hosts = self.multi_node_data['hosts']
@@ -360,7 +360,7 @@ def MultiBuildingAgent(config_path=None, **kwargs):
         def on_send(self, full_topic, headers, message, match):
             '''Handle external building publish requests.'''
             building, topic = match.groups()
-            _launch_file = os.path.join(Agents_DIR+"MultiBuilding/multibuildingagent2.launch.json")
+            _launch_file = os.path.join(Agents_DIR+"MultiBuilding/multibuildingagent.launch.json")
             with open(_launch_file, 'r') as f:
                 self.multi_node_data = json.load(f)
             # self.connected_nodes = list()
