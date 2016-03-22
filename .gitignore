@@ -24,6 +24,8 @@ var/
 
 #especial files
 .idea/
+log/*.*
+.temp/*.*
 bemoss_lib/protocols/BACnet/bacnet-stack-0.8.2/
 /running_agents.txt
 /machine_ip.txt
@@ -32,14 +34,16 @@ volttron.log
 volttron.log.*
 *.volttron.log*
 *.orig
-caslog.txt
-bemosslog.txt
+
 
 bemoss/Applications/launch/
-Agents/MultiBuilding/multibuildingagent2.launch.json
+Agents/MultiBuilding/multibuildingagent.launch.json
+Agents/LaunchFiles/*.launch.json
 cassandra.pid
 cassandra.txt
 cassandra_settings.txt
+
+!readme.txt*
 
 *.egg-info/
 .installed.cfg
