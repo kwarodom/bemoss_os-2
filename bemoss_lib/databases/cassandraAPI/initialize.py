@@ -50,6 +50,37 @@ import re
 import sys
 sys.path.insert(0,os.path.expanduser("~")+"/workspace/bemoss_os/")
 from bemoss_lib.utils.find_own_ip import getIPs
+
+def addSeed(newseed):
+    '''
+    Add a seed IP to the cassandra settings file, and update cassandra yaml file accordingly
+    Will be called by udpclient in a node after a core is discovered
+    :param newseed: Ip address string to add to seed list
+    :return:
+    '''
+    try:
+        casSettingsFile = open(os.path.expanduser("~")+"/workspace/bemoss_os/cassandra_settings.txt",'r+')
+    except IOError as er:
+        print 'cassandra settings file missing. Settings file must be present at this point'
+    settingsContent = casSettingsFile.read()
+    seeds = re.search('seeds:(.*)\n',settingsContent).group(1)
+    if newseed not in seeds:
+        oldseeds = seeds.replace('"','').strip()
+        seeds = '"%s, %s"'% (newseed,oldseeds)
+        settingsContent = re.sub('seeds:(.*)\n','seeds: %s\n'%seeds,settingsContent)
+        casSettingsFile.seek(0)
+        casSettingsFile.write(settingsContent)
+        casSettingsFile.truncate()
+        casYamlFile = open(os.path.expanduser("~")+"/workspace/cassandra/conf/cassandra.yaml",'r+')
+        yamlContent = casYamlFile.read()
+        yamlContent = re.sub('seeds:(.*)\n','seeds: %s\n' % seeds,yamlContent)
+        casYamlFile.seek(0)
+        casYamlFile.write(yamlContent)
+        casYamlFile.truncate()
+        casYamlFile.close()
+
+    casSettingsFile.close()
+
 def init():
     try:
         casSettingsFile = open(os.path.expanduser("~")+"/workspace/bemoss_os/cassandra_settings.txt",'r')
@@ -151,7 +182,7 @@ db_username: %s
 db_password: %s
 MAX_HEAP_SIZE=%s
 HEAP_NEWSIZE=%s
-""" % (cluster_name.strip(),keyspace.strip(),replication_factor.strip(),myips[-1],myips[-1],seeds,authenticator.strip(),db_username.strip(),db_password.strip(),MAX_HEAP_SIZE.strip(),HEAP_NEWSIZE.strip())
+""" % (cluster_name.strip(),keyspace.strip(),replication_factor.strip(),myips[-1],myips[-1],seeds.strip(),authenticator.strip(),db_username.strip(),db_password.strip(),MAX_HEAP_SIZE.strip(),HEAP_NEWSIZE.strip())
     casSettingsFile.write(contents)
     casSettingsFile.close()
 
