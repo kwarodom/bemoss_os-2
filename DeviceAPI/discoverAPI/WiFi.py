@@ -47,8 +47,6 @@ under Contract DE-EE0006352
 '''
 
 import socket
-import httplib
-import StringIO
 import os
 import re
 import json
@@ -69,17 +67,6 @@ db_table_supported_devices = settings.DATABASES['default']['TABLE_supported_devi
 
 debug = True
  
-class SSDPResponse(object):
-    class _FakeSocket(StringIO.StringIO):
-        def makefile(self, *args, **kw):
-            return self
-    def __init__(self, response):
-        r = httplib.HTTPResponse(self._FakeSocket(response))
-        r.begin()
-        self.location = r.getheader("location")
-    def __repr__(self):
-        return self.location
-    
 class SSDPResponseLocation(object):
     def __init__(self, response):
         tokens=response.split('\r\n')
