@@ -48,11 +48,12 @@
 sudo python ~/workspace/bemoss_os/bemoss_lib/utils/find_own_ip.py
 #Step1: Run Platform Initiator
 sudo python ~/workspace/bemoss_os/bemoss_lib/multi_node/platform_initiator_node.py
-#step2: Start/connect to cassandra
-sudo PYTHONPATH='.' python ~/workspace/bemoss_os/bemoss_lib/databases/cassandraAPI/startCassandra.py
-sleep 2
-#Step3: MultiNode server, and Web UI
+#Step2: Do initial configuration for cassandra
+sudo python ~/workspace/bemoss_os/bemoss_lib/databases/cassandraAPI/initialize.py
+#Step3: Look for bemoss core
 sudo python ~/workspace/bemoss_os/bemoss_lib/multi_node/udpclient.py
+#step4: Start/connect to cassandra
+sudo PYTHONPATH='.' python ~/workspace/bemoss_os/bemoss_lib/databases/cassandraAPI/startCassandra.py
 #Step4: Build agents
 cd ~/workspace/bemoss_os/bemoss_lib/multi_node/
 source buildAgents_node.sh
