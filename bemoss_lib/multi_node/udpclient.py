@@ -82,6 +82,7 @@ def getHwAddr(ifname):
 node_name = settings.PLATFORM['node']['name']
 node_type = settings.PLATFORM['node']['type']
 node_model = settings.PLATFORM['node']['model']
+main_core = settings.PLATFORM['node']['main_core']
 node_status = "ONLINE"
 building_name = settings.PLATFORM['node']['building_name']
 
@@ -103,6 +104,7 @@ node_location = building_name+"/"+"".join(str(mac_address).split(':'))
 message = json.dumps({
                         "node_name": node_name,
                         "node_type": node_type,
+                        "main_core": main_core,
                         "node_model": node_model,
                         "node_status": node_status,
                         "building_name": building_name,
@@ -128,6 +130,11 @@ while True:
         ready = select.select([client_socket], [], [], 10)
         if ready[0]:
             recv_data, addr = client_socket.recvfrom(2048)
+            node_info = json.loads(recv_data)
+            core_name = node_info['node_name']
+            if main_core != core_name:
+                print 'Wrong core found '+core_name
+                continue
             found_bemoss_core = True
         else:
             pass

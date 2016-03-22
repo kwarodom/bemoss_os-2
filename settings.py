@@ -71,7 +71,8 @@ PLATFORM = {
         'model': 'Odroid3',
         'building_name': 'bemoss',
         'node_monitor_time': 60,
-        'node_offline_timeout': 0
+        'node_offline_timeout': 0,
+        'main_core': 'BEMOSS core'
     }
 }
 

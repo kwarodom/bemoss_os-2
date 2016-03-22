@@ -204,7 +204,12 @@ while True:
     #1. add new node to node_info table
     #try:
     node_info = json.loads(recv_data)
+
     remote_node_name = node_info['node_name']
+    if node_info['main_core'] != node_name:
+        print 'Got broadcast message from stranger node. Ignoring'
+        continue
+
     remote_init_zone_name = remote_node_name
     remote_node_type = node_info['node_type']
     remote_node_model = node_info['node_model']
