@@ -509,7 +509,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
             row = self.cur.fetchone()
             not_replied_node_last_offline_time = row[0]
 
-            if (datetime.datetime.now() - not_replied_node_last_offline_time).seconds < node_offline_timeout:
+            if (datetime.datetime.now() - not_replied_node_last_offline_time.replace(tzinfo=None)).seconds < node_offline_timeout:
                 continue #skip if not offline for long enough time
             if debug_agent:
                 print "BEMOSS CORE >> node at this location {} has been offline for more than timeout: {} seconds"\
