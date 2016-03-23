@@ -285,17 +285,17 @@ def retrieve(agentID, vars=None, startTime=None, endTime=None,export=False):
     sec_offset = int(round(x.seconds+x.microseconds/1000000.0))
     timeDel = datetime.timedelta(seconds=sec_offset)
 
-    if endTime==None:
-        endTime = datetime.datetime.now()
-        endTimeUTC = datetime.datetime.utcnow()
-    else:
-        endTimeUTC = endTime+timeDel #convert to UTC
-
     if startTime==None:
         startTime = datetime.datetime.now()-datetime.timedelta(hours=24)
         startTimeUTC=datetime.datetime.utcnow()-datetime.timedelta(hours=24)
     else:
         startTimeUTC = startTime + timeDel #convert to UTC
+
+    if endTime==None:
+        endTime = datetime.datetime.now()
+        endTimeUTC = datetime.datetime.utcnow()
+    else:
+        endTimeUTC = endTime+timeDel #convert to UTC
 
     tableName = str("B"+agentID).lower()
 
