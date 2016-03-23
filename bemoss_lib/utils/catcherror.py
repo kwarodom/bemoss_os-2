@@ -56,3 +56,4 @@ def catcherror(msg):
                 print msg
         return catch
     return catchdecorator
+    
