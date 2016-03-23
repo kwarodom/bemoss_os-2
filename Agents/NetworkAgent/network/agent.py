@@ -182,6 +182,13 @@ class NetworkAgent(PublishMixin, BaseAgent):
         self.multi_node_sub_topic("device_stop")
 
     @periodic(60)
+    def periodic_sendScheduleFiles(self):
+        try:
+            self.sendScheduleFiles()
+        except Exception as er:
+            print er
+            print 'Problem sending schedule files to the nodes'
+
     def sendScheduleFiles(self):
         if self.host_type == 'node':
             return
@@ -219,7 +226,11 @@ class NetworkAgent(PublishMixin, BaseAgent):
         command = topic.split("/")[3]
         if command == "file_to_core":
             data = json.loads(message[0])
-            self.sendFiles(data['source_path'],data['destination_path'],'999')
+            try:
+                self.sendFiles(data['source_path'],data['destination_path'],'999')
+            except Exception as er:
+                print er
+                print 'Network agent could not send files to the core'
 
     def sendFiles(self,source_file_path,destination_file_path,zone_id):
         self.cur.execute("SELECT node_type, mac_address, building_name, node_status FROM "+db_table_node_info+" WHERE associated_zone=%s", (zone_id,))
