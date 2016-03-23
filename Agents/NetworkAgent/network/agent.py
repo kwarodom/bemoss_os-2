@@ -870,10 +870,10 @@ class NetworkAgent(PublishMixin, BaseAgent):
             print "Topic: {topic}".format(topic=topic)
             print "Headers: {headers}".format(headers=headers)
             print "Message: {message}\n".format(message=message)
-        building_to_send = str(topic.split("/")[3])  # TODO check this
-        zone_to_send = str(topic.split("/")[4])
+        building_to_send = str(topic.split("/")[5])
+        zone_to_send = str(topic.split("/")[6])
         try:
-            command = str(topic.split("/")[7])
+            command = str(topic.split("/")[4])
             #check if command is correct
             if command == 'device_status' or 'update' or 'identify':
                 _correct_passing_command = True
@@ -914,8 +914,9 @@ class NetworkAgent(PublishMixin, BaseAgent):
     # Behavior to listen to message agent try to communicate with UI
     @matching.match_start('/agent/ui/')
     def match_agent_ui(self, topic, headers, message, match):
-        building_to_send = str(topic.split("/")[3])  # TODO check this
-        zone_to_send = str(topic.split("/")[4])
+        building_to_send = str(topic.split("/")[5])
+        zone_to_send = str(topic.split("/")[6])
+
         # UI resides on core node, find core  and then republish the message
         if self.host_type != "core":
             if debug_agent:
