@@ -181,33 +181,6 @@ class NetworkAgent(PublishMixin, BaseAgent):
         self.multi_node_sub_topic("check_status_response")
         self.multi_node_sub_topic("device_stop")
 
-    @periodic(60)
-    def sendScheduleFiles(self):
-        if self.host_type == 'node':
-            return
-        if len(self.connected_nodes) == 0:
-            return
-        path = os.path.expanduser('~/workspace/bemoss_web_ui')
-        os.chdir(path)
-        os.system('pg_dump -U admin -h localhost bemossdb -f ./resources/bemossdb.sql')
-        os.system('rm -f resources.zip ')
-        os.system('zip -r resources.zip  resources')
-        for replied_node in self.received_nodes_status_reply:
-            print 'BEMOSS CORE >> replied_node {}'.format(replied_node)
-            reply_node_mac = self.multi_node_data['hosts'][replied_node]['mac_address']
-            self.cur.execute("SELECT node_status, associated_zone FROM "+db_table_node_info+" WHERE mac_address=%s",
-                             (reply_node_mac,))
-            if self.cur.rowcount != 0:
-                row = self.cur.fetchone()
-                node_status = row[0]
-                replied_node_zone_id = row[1]
-                if node_status != "OFFLINE":
-                    self.sendFiles(path+'/resources.zip',path+'/resources.zip',replied_node_zone_id)
-                else:
-                    print "Cannot send file. Node offline"
-            else:
-                print 'Node status could not be found in database'
-                continue
 
     @matching.match_start('/agent/networkagent/')
     def on_match_agent_networkagent(self, topic, headers, message, match):
@@ -219,7 +192,11 @@ class NetworkAgent(PublishMixin, BaseAgent):
         command = topic.split("/")[3]
         if command == "file_to_core":
             data = json.loads(message[0])
-            self.sendFiles(data['source_path'],data['destination_path'],'999')
+            try:
+                self.sendFiles(data['source_path'],data['destination_path'],'999')
+            except Exception as er:
+                print er
+                print 'Network agent could not send files to the core'
 
     def sendFiles(self,source_file_path,destination_file_path,zone_id):
         self.cur.execute("SELECT node_type, mac_address, building_name, node_status FROM "+db_table_node_info+" WHERE associated_zone=%s", (zone_id,))
@@ -759,15 +736,6 @@ class NetworkAgent(PublishMixin, BaseAgent):
             newpath = os.path.expanduser(re.sub(r'(.*)/workspace','~/workspace',path))
             with open(newpath,'w') as f:
                 f.write(content)
-
-            if 'bemoss_web_ui/resources.zip' in newpath:
-                folderpath = newpath.replace('/resources.zip','')
-                os.chdir(folderpath)
-                os.system('unzip -o resources.zip')
-                os.system('psql -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pid <> pg_backend_pid();"')
-                os.system('dropdb -U admin -h localhost bemossdb') #This step requires all connections to be closed
-                os.system('createdb bemossdb -O admin')
-                os.system('psql bemossdb < resources/bemossdb.sql')
 
         elif command == "check_status_response":
             if debug_agent:
