@@ -176,11 +176,12 @@ class NetworkAgent(PublishMixin, BaseAgent):
         self.multi_node_sub_topic("device_stop")
         self.multi_node_sub_topic("ask_to_move_device")
         self.multi_node_sub_topic("ui_agent")
+        self.multi_node_sub_topic("ui_app")
         self.multi_node_sub_topic("agent_ui")
         self.multi_node_sub_topic("check_status")
         self.multi_node_sub_topic("check_status_response")
         self.multi_node_sub_topic("device_stop")
-
+        self.multi_node_sub_topic("file_move")
 
     @matching.match_start('/agent/networkagent/')
     def on_match_agent_networkagent(self, topic, headers, message, match):
