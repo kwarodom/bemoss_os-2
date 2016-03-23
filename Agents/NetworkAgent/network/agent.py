@@ -63,7 +63,7 @@ import re
 from bemoss_lib.utils import find_own_ip
 import subprocess
 import base64
-
+from bemoss_lib.utils.catcherror import catcherror
 utils.setup_logging()
 _log = logging.getLogger(__name__)
 Agents_DIR = settings.Agents_DIR
@@ -105,6 +105,8 @@ email_mailServer = settings.NOTIFICATION['email']['mailServer']
 notify_heartbeat = settings.NOTIFICATION['heartbeat']
 
 class NetworkAgent(PublishMixin, BaseAgent):
+
+
     def __init__(self, config_path, **kwargs):
         super(NetworkAgent, self).__init__(**kwargs)
         self.config = utils.load_config(config_path)
@@ -170,19 +172,22 @@ class NetworkAgent(PublishMixin, BaseAgent):
         self.time_sent_notifications = {}
         self.notify_heartbeat = notify_heartbeat
 
+
     def setup(self):
         super(NetworkAgent, self).setup()
         self.multi_node_sub_topic("device_move")
         self.multi_node_sub_topic("device_stop")
         self.multi_node_sub_topic("ask_to_move_device")
         self.multi_node_sub_topic("ui_agent")
+        self.multi_node_sub_topic("ui_app")
         self.multi_node_sub_topic("agent_ui")
         self.multi_node_sub_topic("check_status")
         self.multi_node_sub_topic("check_status_response")
         self.multi_node_sub_topic("device_stop")
-
+        self.multi_node_sub_topic("file_move")
 
     @matching.match_start('/agent/networkagent/')
+    @catcherror('Fails at agent-to-networkagent')
     def on_match_agent_networkagent(self, topic, headers, message, match):
         if debug_agent:
             print "{} >> received the message at {}".format(self.agent_id, datetime.datetime.now())
@@ -382,6 +387,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
 
     @periodic(clock_time)
+    @catcherror('node heartbeat fail')
     def nodeHeartbeat(self):
         if self.host_type == "core":
             _launch_file = os.path.join(Agents_DIR+"MultiBuilding/multibuildingagent.launch.json")
@@ -403,6 +409,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
 
     @periodic(node_monitor_time)
+    @catcherror('node monitoring fail')
     def check_node_status(self):
         #This is the job of core only
         if self.host_type != "core" or  len(self.connected_nodes) == 0:
@@ -553,6 +560,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
         else:
             print "there is no active alert for Network Agent"
 
+
     def priority_counter(self, _active_alert_id, _agent_offline_msg, agent_id, email_subject_node):
         # find the priority counter limit then compare it with priority_counter in priority table
         # if greater than the counter limit then send notification and reset the value
@@ -652,7 +660,6 @@ class NetworkAgent(PublishMixin, BaseAgent):
         emailService.sendEmail(email_fromaddr, _active_alert_email, email_username,
                                email_password, _email_subject, _email_text, email_mailServer)
 
-
     def send_device_notification_sms(self, _active_alert_phone_number_misoperation, _sms_subject):
             print "INSIDE send_device_notification_sms"
             print _active_alert_phone_number_misoperation
@@ -662,6 +669,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
     # Behavior to listen to message from UI when user change zone of a device
     @matching.match_start('/ui/networkagent/')
+    @catcherror('Failed ui-to-networkagent')
     def on_match_ui_networkagent(self, topic, headers, message, match):
         if debug_agent:
             print "{} >> received the message at {}".format(self.agent_id, datetime.datetime.now())
@@ -713,6 +721,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
     # Behavior to listen to message from MultiBuilding Agent
     @matching.match_start('building/recv/')
+    @catcherror('Failed building-recv')
     def on_match_building_recv(self, topic, headers, message, match):
         if debug_agent:
             print "Topic: {topic}".format(topic=topic)
@@ -790,6 +799,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
         else:
             pass
     @matching.match_start('/ui/app/')
+    @catcherror('Failed ui-to-app command')
     def on_match_ui_app(self, topic, headers, message, match):
         print "Topic: {topic}".format(topic=topic)
         print "Headers: {headers}".format(headers=headers)
@@ -833,6 +843,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
     # Behavior to listen to message UI try to communicate with agent
     @matching.match_start('/ui/agent/')
+    @catcherror('Failed ui-to-agent command')
     def on_match_ui_agent(self, topic, headers, message, match):
         if debug_agent:
             print "Topic: {topic}".format(topic=topic)
@@ -881,6 +892,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
     # Behavior to listen to message agent try to communicate with UI
     @matching.match_start('/agent/ui/')
+    @catcherror('Failed agent-ui')
     def match_agent_ui(self, topic, headers, message, match):
         building_to_send = str(topic.split("/")[5])
         zone_to_send = str(topic.split("/")[6])
@@ -984,6 +996,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
                           ";volttron-ctl status")
 
         print "{} >> has successfully launched {} located in {}".format(self.agent_id, agent_id, dir)
+
 
 def main(argv=sys.argv):
     '''Main method called by the eggsecutable.'''
