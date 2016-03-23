@@ -232,17 +232,8 @@ def ThermostatAgent(config_path, **kwargs):
             print "Agent {} Speaking:  >> got new update from UI at {}".format(agent_id,
                                                                                _time_receive_update_from_ui)
             try:
-                # 1. get path to the new launch file from the message sent by UI
-                _launch_file = os.path.expanduser('~/workspace/bemoss_web_ui/')+'resources/scheduler_data/thermostat/' + agent_id+'_schedule.json'
-                if schedule is None:
-                    try:
-                        with open(_launch_file) as json_data:
-                            _new_schedule_object = json.load(json_data)
-                    except Exception as er:
-                        print er, "schdule file open failed. Couldn't Update schedule to Device"
-                        return
-                else:
-                    _new_schedule_object = schedule
+                # 1. get schedule from UI
+                _new_schedule_object = schedule
 
                 # set self.current_schedule_object to be the new schedule
                 self.current_schedule_object = _new_schedule_object['thermostat']
