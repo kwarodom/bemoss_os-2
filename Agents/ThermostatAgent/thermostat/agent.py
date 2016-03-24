@@ -62,6 +62,7 @@ import psycopg2.extras
 import settings
 import socket
 from bemoss_lib.databases.cassandraAPI import cassandraDB
+from bemoss_lib.utils.catcherror import catcherror
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -590,6 +591,7 @@ def ThermostatAgent(config_path, **kwargs):
 
         # 5. deviceControlBehavior (generic behavior)
         @matching.match_exact('/ui/agent/'+device_type+'/update/'+ _topic_Agent_UI_tail)
+        @catcherror('Failed to control')
         def deviceControlBehavior(self, topic, headers, message, match):
             print agent_id + " got\nTopic: {topic}".format(topic=topic)
             print "Headers: {headers}".format(headers=headers)
