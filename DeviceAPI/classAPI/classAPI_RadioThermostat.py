@@ -130,7 +130,7 @@ class API:
         return _theJSON["model"]
 
     def rediscover(self):
-        addresses= WiFi.discover('thermostat',timeout=15,retries=3) #rediscover addresses and use the one most similar to last one
+        addresses= WiFi.discover('thermostat',timeout=15,retries=1) #rediscover addresses and use the one most similar to last one
         new_address = None
         for address in addresses:
             macaddress = WiFi.getMACaddress('thermostat', address)
