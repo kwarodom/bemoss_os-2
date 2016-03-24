@@ -73,7 +73,7 @@ db_database = settings.DATABASES['default']['NAME']
 
 host_ip_address = find_own_ip.getIPs()[-1] #use the last IP in the list for host ip
 
-debug_agent = False
+debug_agent = settings.DEBUG
 host_name = settings.PLATFORM['node']['name']
 db_host = settings.DATABASES['default']['HOST']
 db_port = settings.DATABASES['default']['PORT']
@@ -791,6 +791,10 @@ class NetworkAgent(PublishMixin, BaseAgent):
                 print "agent_ui republish message {}".format(_message_to_send)
             self.publish_ipc(_topic_to_send, _message_to_send)
         elif command == "check_status":
+            if self.host_type == 'core':
+                if debug_agent:
+                    print 'Got check status querry to a core'
+
             if debug_agent:
                 print "sending Response"
             _topic_to_send = 'building/send/'+self.core_location+'/check_status_response'
