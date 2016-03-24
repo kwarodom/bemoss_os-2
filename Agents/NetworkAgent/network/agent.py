@@ -794,7 +794,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
             if self.host_type == 'core':
                 if debug_agent:
                     print 'Got check status querry to a core'
-
+                return
             if debug_agent:
                 print "sending Response"
             _topic_to_send = 'building/send/'+self.core_location+'/check_status_response'
