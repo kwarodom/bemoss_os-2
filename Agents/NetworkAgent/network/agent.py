@@ -58,7 +58,6 @@ import datetime
 import psycopg2
 from bemoss_lib.communication.Email import EmailService
 from bemoss_lib.communication.sms import SMSService
-import ast
 import re
 from bemoss_lib.utils import find_own_ip
 import subprocess
@@ -758,7 +757,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
             ui_message = json.loads(message[0])
             _topic_to_send =  ui_message["topic"]
             try:
-                _message_to_send = ast.literal_eval(ui_message["message"])
+                _message_to_send = json.loads(ui_message["message"])
             except:
                 _message_to_send = ui_message["message"]
             if debug_agent:
@@ -771,7 +770,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
             _topic_to_send =  ui_message["topic"]
             print "ui_app republish topic {}".format(_topic_to_send)
             try:
-                _message_to_send = ast.literal_eval(ui_message["message"])
+                _message_to_send = json.loads(ui_message["message"])
             except:
                 _message_to_send = ui_message["message"]
             print "ui_app republish message {}".format(_message_to_send)
@@ -782,7 +781,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
             _topic_to_send =  ui_message["topic"]
             #convert received message from unicode dict to dict
             try:
-                _message_to_send = ast.literal_eval(ui_message["message"])
+                _message_to_send = json.loads(ui_message["message"])
             except:
                 _message_to_send = ui_message["message"]
             if debug_agent:
@@ -849,6 +848,11 @@ class NetworkAgent(PublishMixin, BaseAgent):
             print "Topic: {topic}".format(topic=topic)
             print "Headers: {headers}".format(headers=headers)
             print "Message: {message}\n".format(message=message)
+
+        device_type = str(topic.split("/")[3])
+        if device_type == 'misc': #miscelleneus messages doesn't need forwarding, and follows different messaging pattern
+            return
+
         building_to_send = str(topic.split("/")[5])
         zone_to_send = str(topic.split("/")[6])
         try:
@@ -894,10 +898,12 @@ class NetworkAgent(PublishMixin, BaseAgent):
     @matching.match_start('/agent/ui/')
     @catcherror('Failed agent-ui')
     def match_agent_ui(self, topic, headers, message, match):
+        device_type = str(topic.split("/")[3])
+        if device_type == 'misc': #miscelleneus messages doesn't need forwarding, and follows different messaging pattern
+            return
+        # UI resides on core node, find core  and then republish the message
         building_to_send = str(topic.split("/")[5])
         zone_to_send = str(topic.split("/")[6])
-
-        # UI resides on core node, find core  and then republish the message
         if self.host_type != "core":
             if debug_agent:
                 print "multi-node communication -> forwarding message to UI resides on the core node"
