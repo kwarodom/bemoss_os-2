@@ -760,10 +760,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
             try:
                 _message_to_send = ast.literal_eval(ui_message["message"])
             except:
-                try:
-                    _message_to_send = json.loads(ui_message["message"])
-                except:
-                    _message_to_send = ui_message["message"]
+                _message_to_send = ui_message["message"]
             if debug_agent:
                 print "ui_agent republish message {}".format(_message_to_send)
             self.publish_ipc(_topic_to_send, _message_to_send)
