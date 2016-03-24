@@ -210,13 +210,15 @@ def ThermostatAgent(config_path, **kwargs):
             if identifiable == "True": Thermostat.identifyDevice()
             try:
                 self.cur.execute("SELECT override FROM " + db_table_thermostat + " WHERE thermostat_id=%s", (agent_id,))
-                if  self.cur.rowcount != 0:
-                    self._override = self.cur.fetchone()[0]
-                else:
-                    # update initial value of override column of a thermostat to False
+                override_status = self.cur.fetchone()[0]
+                if override_status is None:
+                    # update initial value of override column of a thermostat to True
+                    self._override = True
                     self.cur.execute("UPDATE " + db_table_thermostat + " SET override=%s WHERE thermostat_id=%s",
                                      (self._override, agent_id))
                     self.con.commit()
+                else:
+                    self._override = override_status
             except:
                 print "{} >> cannot update override column of thermostat".format(agent_id)
 
