@@ -416,7 +416,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
                 print "Nothing to be done. No connected nodes, or I am node"
             return
         #start with the assumption that non-of the nodes have replied to check_status querry
-        self.not_replied_nodes = self.connected_nodes
+        self.not_replied_nodes = list(self.connected_nodes)
 
         if debug_agent:
             print 'BEMOSS CORE >> num nodes replied to check node status message = {}'.format(len(self.received_nodes_status_reply))
@@ -428,6 +428,11 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
             #check the replied node status in database
             reply_node_mac = self.multi_node_data['hosts'][replied_node]['mac_address']
+            self.cur.execute("UPDATE "+db_table_node_info+" SET node_status=(%s),last_scanned_time=(%s)"
+                                 "WHERE mac_address=(%s)",
+                                 ("ONLINE", datetime.datetime.now(), reply_node_mac))
+            self.con.commit()
+
             self.cur.execute("SELECT node_status, associated_zone FROM "+db_table_node_info+" WHERE mac_address=%s",
                              (reply_node_mac,))
             if self.cur.rowcount != 0:
@@ -438,10 +443,6 @@ class NetworkAgent(PublishMixin, BaseAgent):
                 continue
 
             if replied_node_old_status == "OFFLINE": #this means it recently became online
-                self.cur.execute("UPDATE "+db_table_node_info+" SET node_status=(%s),last_scanned_time=(%s)"
-                                 "WHERE mac_address=(%s)",
-                                 ("ONLINE", datetime.datetime.now(), reply_node_mac))
-                self.con.commit()
                 #recently online node. Transfer back the agents
                 self.cur.execute("SELECT device_id FROM "+db_table_node_device+" WHERE previous_zone_id=%s",
                              (replied_node_zone_id,))
