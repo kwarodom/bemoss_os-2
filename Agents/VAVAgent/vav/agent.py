@@ -157,6 +157,7 @@ def VAVAgent(config_path, **kwargs):
             self.ip_address = ip_address if ip_address != None else None
             self.changed_variables = None
             self.lastUpdateTime = None
+            self.already_offline = False
 
 
             #2. setup connection with db -> Connect to bemossdb database
@@ -294,12 +295,15 @@ def VAVAgent(config_path, **kwargs):
                     self.cur.execute("UPDATE "+db_table_vav+" SET network_status=%s WHERE vav_id=%s",
                                      ('OFFLINE', agent_id))
                     self.con.commit()
-                    _time_stamp_last_offline = str(datetime.datetime.now())
-                    self.cur.execute("UPDATE "+db_table_vav+" SET last_offline_time=%s "
-                                     "WHERE vav_id=%s",
-                                     (_time_stamp_last_offline, agent_id))
-                    self.con.commit()
+                    if self.already_offline is False:
+                        self.already_offline = True
+                        _time_stamp_last_offline = str(datetime.datetime.now())
+                        self.cur.execute("UPDATE "+db_table_vav+" SET last_offline_time=%s "
+                                         "WHERE vav_id=%s",
+                                         (_time_stamp_last_offline, agent_id))
+                        self.con.commit()
                 else:
+                    self.already_offline = False
                     self.cur.execute("UPDATE "+db_table_vav+" SET network_status=%s WHERE vav_id=%s",
                                      ('ONLINE', agent_id))
                     self.con.commit()

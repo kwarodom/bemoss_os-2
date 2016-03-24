@@ -178,6 +178,7 @@ def ThermostatAgent(config_path, **kwargs):
             self.runningSeconds = 0
             self._override = True
             self.get_sch_day = datetime.datetime.now().day
+            self.already_offline = False
             # Get the schedule from device for the first time.
             try:
                 Thermostat.getDeviceSchedule()
@@ -427,12 +428,15 @@ def ThermostatAgent(config_path, **kwargs):
                     self.cur.execute("UPDATE "+db_table_thermostat+" SET network_status=%s WHERE thermostat_id=%s",
                                      ('OFFLINE', agent_id))
                     self.con.commit()
-                    _time_stamp_last_offline = str(datetime.datetime.now())
-                    self.cur.execute("UPDATE "+db_table_thermostat+" SET last_offline_time=%s "
-                                     "WHERE thermostat_id=%s",
-                                     (_time_stamp_last_offline, agent_id))
-                    self.con.commit()
+                    if self.already_offline is False:
+                        self.already_offline = True
+                        _time_stamp_last_offline = str(datetime.datetime.now())
+                        self.cur.execute("UPDATE "+db_table_thermostat+" SET last_offline_time=%s "
+                                         "WHERE thermostat_id=%s",
+                                         (_time_stamp_last_offline, agent_id))
+                        self.con.commit()
                 else:
+                    self.already_offline = False
                     self.cur.execute("UPDATE "+db_table_thermostat+" SET network_status=%s WHERE thermostat_id=%s",
                                      ('ONLINE', agent_id))
                     self.con.commit()
@@ -519,19 +523,6 @@ def ThermostatAgent(config_path, **kwargs):
                     _ip_address = psycopg2.extras.Inet(self.ip_address)
                     self.cur.execute("UPDATE " + db_table_thermostat + " SET ip_address=%s WHERE thermostat_id=%s",
                                      (_ip_address, agent_id))
-                    self.con.commit()
-                if self.ip_address != None and self.get_variable('offline_count')>=3:
-                    self.cur.execute("UPDATE "+db_table_thermostat+" SET network_status=%s WHERE thermostat_id=%s",
-                                     ('OFFLINE', agent_id))
-                    self.con.commit()
-                    _time_stamp_last_offline = str(datetime.datetime.now())
-                    self.cur.execute("UPDATE "+db_table_thermostat+" SET last_offline_time=%s "
-                                     "WHERE thermostat_id=%s",
-                                     (_time_stamp_last_offline, agent_id))
-                    self.con.commit()
-                else:
-                    self.cur.execute("UPDATE "+db_table_thermostat+" SET network_status=%s WHERE thermostat_id=%s",
-                                     ('ONLINE', agent_id))
                     self.con.commit()
                 print("{} updates database name {} during deviceMonitorBehavior successfully".format(agent_id, db_database))
                 print(

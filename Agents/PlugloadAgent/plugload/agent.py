@@ -178,6 +178,7 @@ def PlugloadAgent(config_path, **kwargs):
             self.changed_variables = None
             self.lastUpdateTime = None
             self.subscriptionTime = datetime.datetime.now()
+            self.already_offline = False
             #2. setup connection with db -> Connect to bemossdb database
             try:
                 self.con = psycopg2.connect(host=db_host, port=db_port, database=db_database, user=db_user,
@@ -281,12 +282,15 @@ def PlugloadAgent(config_path, **kwargs):
                         self.cur.execute("UPDATE "+db_table_plugload+" SET network_status=%s WHERE plugload_id=%s",
                                          ('OFFLINE', agent_id))
                         self.con.commit()
-                        _time_stamp_last_offline = str(datetime.datetime.now())
-                        self.cur.execute("UPDATE "+db_table_plugload+" SET last_offline_time=%s "
-                                         "WHERE plugload_id=%s",
-                                         (_time_stamp_last_offline, agent_id))
-                        self.con.commit()
+                        if self.already_offline is False:
+                            self.already_offline = True
+                            _time_stamp_last_offline = str(datetime.datetime.now())
+                            self.cur.execute("UPDATE "+db_table_plugload+" SET last_offline_time=%s "
+                                             "WHERE plugload_id=%s",
+                                             (_time_stamp_last_offline, agent_id))
+                            self.con.commit()
                     else:
+                        self.already_offline = False
                         self.cur.execute("UPDATE "+db_table_plugload+" SET network_status=%s WHERE plugload_id=%s",
                                          ('ONLINE', agent_id))
                         self.con.commit()
