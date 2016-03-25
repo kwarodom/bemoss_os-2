@@ -1,5 +1,4 @@
 {
     "agent_id": "DeviceDiscoveryAgent",
-    "device_scan_time":10,
-    "device_scan_time_multiplier":2
+    "device_scan_time":10
 }
