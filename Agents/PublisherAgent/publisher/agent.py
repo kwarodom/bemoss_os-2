@@ -96,7 +96,8 @@ class PublisherAgent(PublishMixin, BaseAgent):
             headers_mod.CONTENT_TYPE: headers_mod.CONTENT_TYPE.PLAIN_TEXT,
             headers_mod.DATE: now,
         }
-        self.publish('heartbeat/listeneragent', headers, now)
+        self.publish('/ui/agent/misc/bemoss/discovery_request', headers, now)
+        print "published message"
 
 def main(argv=sys.argv):
     '''Main method called by the eggsecutable.'''

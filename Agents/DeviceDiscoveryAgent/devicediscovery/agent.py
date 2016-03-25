@@ -71,15 +71,13 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
     config = utils.load_config(config_path)  # load the config_path from devicediscoveryagent.launch.json
     def get_config(name):
         try:
-            value = kwargs.pop(name)  # from the **kwargs when call this function
+            kwargs.pop(name)  # from the **kwargs when call this function
         except KeyError as er:
-            print "keyError", er
             return config.get(name, '')
 
     # 1. @params agent
     agent_id = get_config('agent_id')
     device_scan_time = get_config('device_scan_time')
-    device_scan_time_multiplier = get_config('device_scan_time_multiplier')
     headers = {headers_mod.FROM: agent_id}
     topic_delim = '/'  # topic delimiter
 
@@ -104,8 +102,6 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
 
     # @paths
     PROJECT_DIR = settings.PROJECT_DIR
-    # Loaded_Agents_DIR = settings.Loaded_Agents_DIR
-    # Autostart_Agents_DIR = settings.Autostart_Agents_DIR
     Applications_Launch_DIR = settings.Applications_Launch_DIR
     Agents_Launch_DIR = settings.Agents_Launch_DIR
 
@@ -168,7 +164,6 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
             '''Discovery Processes'''
             self.deviceDiscoveryBehavior(self.discovery_list)
 
-
         def deviceDiscoveryBehavior(self,discoverylist):
             print "Start Discovery Process--------------------------------------------------"
             # Update bemossdb miscellaneous and bemoss_notify tables with discovery start
@@ -223,7 +218,6 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
                     self.publish(topic, headers, message)
 
                     print "Stop Discovery Process--------------------------------------------------"
-                    #self.device_scan_time *= device_scan_time_multiplier
                 time.sleep(self.device_scan_time)
 
 
@@ -343,9 +337,6 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
                                 else:
                                     print "{} >> {} is running on another node, ignoring restart"\
                                             .format(agent_id, agent_launch_file)
-                                # self.cur.execute("UPDATE "+db_table_device_info+" SET device_status=%s where "
-                                #                                                           "id=%s", ("ON", deviceID))
-                                # self.con.commit()
                             elif bemoss_status == 'NBD':
                                 print '{} >> Device with MAC address {} found to be Non-BEMOSS'\
                                         .format(agent_id, macaddress)
@@ -353,7 +344,7 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
                                 print '{} >> Device with MAC address {} is already discovered with pending status'\
                                         .format(agent_id, macaddress)
 
-                        #case2: new device has been discovered
+                    #case2: new device has been discovered
                     else:
                         print '{} >> new device found with macaddress {}'\
                             .format(agent_id, macaddress)
@@ -424,9 +415,6 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
                                     deviceNickname = modelinfo['nickname']
                                 else:
                                     deviceNickname = deviceType+str(self.device_num)
-                                # self.cur.execute("INSERT INTO "+db_table_device_info+" VALUES(%s,%s,%s,%s,%s,%s,%s,999,%s,'ON')",
-                                #                  (deviceID, deviceID, deviceType+str(self.device_num), deviceType, device_type_id,
-                                #                   deviceVendor, deviceModel, macaddress))
                                 self.cur.execute("INSERT INTO "+db_table_device_info+" VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                                                  (deviceID, deviceType, deviceVendor, deviceModel, device_type_id, macaddress,
                                                   None, None, identifiable, com_type, str(datetime.datetime.now()), macaddress, 'PND'))
@@ -512,7 +500,6 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
             self.scan_for_devices = True
             self.deviceDiscoveryBehavior(discovery_model_names)
 
-
         def checkMACinDB(self, conn, macaddr):
             cur = conn.cursor()
             cur.execute("SELECT device_id FROM "+db_table_device_info+" WHERE mac_address=%(id)s",
@@ -536,25 +523,6 @@ def DeviceDiscoveryAgent(config_path, **kwargs):
                 else:
                     pass
             return agent_still_running
-
-        def publish_subtopic(self, publish_item, topic_prefix):
-            #TODO: Update to use the new topic templates
-            if type(publish_item) is dict:
-                # Publish an "all" property, converting item to json
-
-                headers[headers_mod.CONTENT_TYPE] = headers_mod.CONTENT_TYPE.JSON
-                self.publish_json(topic_prefix + topic_delim + "all", headers, json.dumps(publish_item))
-                print "WiFiTherAgent got"+str(type(publish_item))
-                os.system("date")
-                # Loop over contents, call publish_subtopic on each
-                for topic in publish_item.keys():
-                    self.publish_subtopic(publish_item[topic], topic_prefix + topic_delim + topic)
-
-            else:
-                # Item is a scalar type, publish it as is
-                headers[headers_mod.CONTENT_TYPE] = headers_mod.CONTENT_TYPE.PLAIN_TEXT
-                self.publish(topic_prefix, headers, str(publish_item))
-                print "Topic:{topic}={message}".format(topic=topic_prefix,message=str(publish_item))
 
         def write_launch_file(self, executable, deviceID, device_monitor_time, deviceModel, deviceVendor, deviceType,
                               api, address, macaddress, db_host, db_port, db_database, db_user, db_password):
