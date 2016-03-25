@@ -58,7 +58,7 @@ import datetime
 import netifaces as ni
 import time
 import select
-from bemoss_lib.databases.cassandraAPI import initialize
+from bemoss_lib.databases.cassandraAPI import cassandraHelper
 
 #find broadcast address automatically from script
 interfaces=ni.interfaces()
@@ -146,7 +146,7 @@ print "found_bemoss_core {}".format(found_bemoss_core)
 print str(addr)+":"+str(recv_data)
 
 #add the ip address of the core as a seed node for the cassandra cluster
-initialize.addSeed(addr[0])
+cassandraHelper.addSeed(addr[0])
 
 #add new node to node_info table
 node_info = json.loads(recv_data)

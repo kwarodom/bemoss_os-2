@@ -51,11 +51,35 @@ import numpy
 import datetime
 import re
 from bemoss_lib.databases.cassandraAPI import cassandraHelper
-
+from bemoss_lib.utils.catcherror import catcherror
+import json
 connection_established = False
 
 #Global variables
 bCluster, bSpace, keyspace_name, replication_factor = None, None, None, None
+
+
+
+@catcherror('Could not get replication')
+def get_replication(keyspace):
+
+    global connection_established
+    if not connection_established:
+        makeConnection()
+    x = bSpace.execute("SELECT strategy_options from system.schema_keyspaces where keyspace_name=%s",(keyspace,))
+    y =  int(json.loads(x[0][0])['replication_factor'])
+    return y
+
+
+@catcherror('Could not set replication')
+def set_replication(keyspace,replication):
+
+    global connection_established
+    if not connection_established:
+        makeConnection()
+    bSpace.execute("ALTER KEYSPACE %s WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : %d };" % (keyspace,replication))
+
+
 
 def makeConnection():
     try:
@@ -373,3 +397,8 @@ def retrieve(agentID, vars=None, startTime=None, endTime=None,export=False):
 def retrieve_for_export(agentID, vars=None, startTime=None, endTime=None):
     a,b = retrieve(agentID,vars,startTime,endTime,export=True)
     return a,b
+
+if __name__ == '__main__':
+    x = get_replication('system_auth')
+    set_replication('system_auth',2)
+    print x
