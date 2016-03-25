@@ -52,10 +52,10 @@ under Contract DE-EE0006352
 import os
 import json
 import sys
-from bemoss_lib.databases.cassandraAPI import cassandraDB
 os.chdir(os.path.expanduser("~/workspace/bemoss_os/"))  # = ~/workspace/bemoss_os
 current_working_directory = os.getcwd()
 sys.path.append(current_working_directory)
+from bemoss_lib.databases.cassandraAPI import cassandraDB
 import settings
 import psycopg2
 import datetime
