@@ -50,7 +50,7 @@ def catcherror(msg):
     def catchdecorator(func):
         def catch(*args,**kwargs):
             try:
-                func(*args,**kwargs)
+                return func(*args,**kwargs)
             except Exception as er:
                 print 'Failed on function: '+func.__name__+' with error: ' + str(er)
                 print msg

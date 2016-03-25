@@ -52,6 +52,7 @@ under Contract DE-EE0006352
 import os
 import json
 import sys
+from bemoss_lib.databases.cassandraAPI import cassandraDB
 os.chdir(os.path.expanduser("~/workspace/bemoss_os/"))  # = ~/workspace/bemoss_os
 current_working_directory = os.getcwd()
 sys.path.append(current_working_directory)
@@ -196,6 +197,8 @@ _launch_file = os.path.join(Agents_DIR+"MultiBuilding/multibuildingagent.launch.
 with open(_launch_file, 'w') as outfile:
     json.dump(data, outfile, indent=4, sort_keys=True)
 
+node_count = 1
+current_system_auth_replication = cassandraDB.get_replication('system_auth')
 while True:
     print("BEMOSS core >> Listening to connection from BEMOSS node: ")
     recv_data, addr = server_socket.recvfrom(2048)
@@ -209,6 +212,10 @@ while True:
     if node_info['main_core'] != node_name:
         print 'Got broadcast message from stranger node. Ignoring'
         continue
+
+    node_count += 1
+    if node_count > current_system_auth_replication:
+        cassandraDB.set_replication('system_auth',node_count)
 
     remote_init_zone_name = remote_node_name
     remote_node_type = node_info['node_type']
@@ -268,6 +275,7 @@ while True:
         data=json.load(infile)
         agent_id = 'multibuildingagent'
         agentname ='multibuilding'
+
     os.chdir(os.path.expanduser("~/workspace/bemoss_os/env/bin"))
     os.system(#". env/bin/activate"
                   "./volttron-ctl stop --tag " + agent_id+
