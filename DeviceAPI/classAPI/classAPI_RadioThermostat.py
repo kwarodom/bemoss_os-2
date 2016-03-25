@@ -540,6 +540,8 @@ class API:
 
 
     def getScheduleSetpoint(self,testDate):
+        if self.get_variable('scheduleData') is None:
+            self.getDeviceSchedule()
         schData = self.get_variable('scheduleData')
         daysofweek=['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
         todayDay = daysofweek[testDate.weekday()]
