@@ -108,18 +108,18 @@ def getHwAddr(ifname):
 def add_building_zone(_zone_nickname, _zone_id):
     if _zone_id == None:
         cur.execute("SELECT zone_id FROM "+db_table_building_zone+" WHERE zone_nickname=%s", (_zone_nickname,))
-        if cur.rowcount == 0:  # this APP used to be launched before
+        if cur.rowcount == 0:
             cur.execute("INSERT INTO "+db_table_building_zone+"(zone_nickname) VALUES(%s)", (_zone_nickname,))
             conn.commit()
     else:
         cur.execute("SELECT zone_id FROM "+db_table_building_zone+" WHERE zone_nickname=%s", (_zone_nickname,))
-        if cur.rowcount == 0:  # this APP used to be launched before
+        if cur.rowcount == 0:
             cur.execute("INSERT INTO "+db_table_building_zone+"(zone_nickname,zone_id) VALUES(%s,%s)", (_zone_nickname,_zone_id))
             conn.commit()
 
 def add_global_zone_setting(_id, _zone_id, _heat_setpoint, _cool_setpoint, _illuminance):
     cur.execute("SELECT id FROM "+db_table_global_zone_setting+" WHERE zone_id=%s", (_zone_id,))
-    if cur.rowcount == 0:  # this APP used to be launched before
+    if cur.rowcount == 0:
         cur.execute("INSERT INTO "+db_table_global_zone_setting+"(id, zone_id, heat_setpoint, cool_setpoint, illuminance)"
                                                                 " VALUES(%s,%s,%s,%s,%s)", (_id,_zone_id,_heat_setpoint,
                                                                                             _cool_setpoint, _illuminance,))
@@ -137,10 +137,11 @@ def insertNodeInfo(node_name,node_type,node_model,node_status,building_name, ip_
         conn.commit()
         cur.execute("UPDATE "+db_table_node_info+" SET associated_zone=%s WHERE mac_address=%s", (associated_zone, mac_address))
         conn.commit()
+        return 1
     else:
         cur.execute("UPDATE "+db_table_node_info+" SET ip_address=%s WHERE mac_address=%s",(ip_address, mac_address))
         conn.commit()
-        pass
+        return 0
 
 node_name = settings.PLATFORM['node']['name']
 init_zone_name = node_name
@@ -213,9 +214,7 @@ while True:
         print 'Got broadcast message from stranger node. Ignoring'
         continue
 
-    node_count += 1
-    if node_count > current_system_auth_replication:
-        cassandraDB.set_replication('system_auth',node_count)
+
 
     remote_init_zone_name = remote_node_name
     remote_node_type = node_info['node_type']
@@ -231,14 +230,18 @@ while True:
     add_building_zone(remote_init_zone_name, None)
     #cur = conn.cursor()
     cur.execute("SELECT zone_id FROM "+db_table_building_zone+" WHERE zone_nickname=%s", (remote_init_zone_name,))
-    if cur.rowcount != 0:  # this APP used to be launched before
+    if cur.rowcount != 0:
         _zone_id = int(cur.fetchone()[0])
         add_global_zone_setting(_zone_id, _zone_id, 74, 78, 80)
         remote_associated_zone = _zone_id
-        insertNodeInfo(remote_node_name,remote_node_type,remote_node_model,remote_node_status,remote_building_name,
+        isNew = insertNodeInfo(remote_node_name,remote_node_type,remote_node_model,remote_node_status,remote_building_name,
                remote_ip_address,remote_mac_address, remote_associated_zone, remote_date_added,remote_communication,remote_last_scanned_time)
+        node_count += isNew #Add node count only if it is a new node.
+        if node_count > current_system_auth_replication:
+            cassandraDB.set_replication('system_auth',node_count)
 
-
+    else: #something wrong with database, ignore this node
+        continue
     #2. send message back to client once bemoss client discovered bemoss node
     '''construct message to send to bemoss node '''
     message = json.dumps({
