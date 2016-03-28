@@ -446,7 +446,7 @@ def scheduleragent(config_path, **kwargs):
                     else:
                         zone_id = 999  # default core id TODO this has to be changed
                     _topic_Agent_UI_tail = building_name + '/' + str(zone_id) + '/' + agent_id
-                    topic_app_agent = '/ui/agent/plugload/update/' + _topic_Agent_UI_tail
+                    topic_app_agent = '/ui/agent/lighting/update/' + _topic_Agent_UI_tail
 
                     if str(self.brightnessToChange_current) == "None" and str(self.colorToChange_current) == "None":
                         if str(self.statusToChange_current) != "None": #send only status
