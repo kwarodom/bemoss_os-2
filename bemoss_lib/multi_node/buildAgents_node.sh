@@ -70,7 +70,6 @@ volttron-pkg package ~/workspace/bemoss_os/Agents/MotionSensorAgent
 volttron-pkg package ~/workspace/bemoss_os/Agents/AppLauncherAgent
 volttron-pkg configure /tmp/volttron_wheels/applauncheragent-0.1-py2-none-any.whl ~/workspace/bemoss_os/Agents/AppLauncherAgent/applauncheragent.launch.json
 volttron-ctl install applauncheragent=/tmp/volttron_wheels/applauncheragent-0.1-py2-none-any.whl
-volttron-pkg package ~/workspace/bemoss_os/Applications/code/Thermostat_Scheduler
 volttron-pkg package ~/workspace/bemoss_os/Applications/code/Lighting_Scheduler
 volttron-pkg package ~/workspace/bemoss_os/Applications/code/Plugload_Scheduler
 
@@ -99,8 +98,6 @@ sudo chmod 777 -R /tmp/volttron_wheels/
 #Install Apps
 #cd ~/workspace/bemoss_os/Applications/code/AppLauncherAgent
 #sudo python installapp.py
-cd ~/workspace/bemoss_os/Applications/code/Thermostat_Scheduler
-sudo python installapp.py
 cd ~/workspace/bemoss_os/Applications/code/Lighting_Scheduler
 sudo python installapp.py
 cd ~/workspace/bemoss_os/Applications/code/Plugload_Scheduler
