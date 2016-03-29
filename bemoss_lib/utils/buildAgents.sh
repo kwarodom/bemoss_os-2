@@ -67,9 +67,6 @@ volttron-ctl install applauncheragent=/tmp/volttron_wheels/applauncheragent-0.1-
 volttron-pkg package ~/workspace/bemoss_os/Applications/code/Lighting_Scheduler
 volttron-pkg package ~/workspace/bemoss_os/Applications/code/Plugload_Scheduler
 
-volttron-pkg package ~/workspace/bemoss_web_ui/agents/IEBSubscriber/
-volttron-pkg configure /tmp/volttron_wheels/iebsubscriberagent-0.1-py2-none-any.whl ~/workspace/bemoss_web_ui/agents/IEBSubscriber/iebsubscriber.launch.json
-volttron-ctl install iebsubscriberagent=/tmp/volttron_wheels/iebsubscriberagent-0.1-py2-none-any.whl
 volttron-pkg package ~/workspace/bemoss_os/Agents/ApprovalHelperAgent/
 volttron-pkg configure /tmp/volttron_wheels/approvalhelperagent-0.1-py2-none-any.whl ~/workspace/bemoss_os/Agents/ApprovalHelperAgent/approvalhelperagent.launch.json
 volttron-ctl install approvalhelperagent=/tmp/volttron_wheels/approvalhelperagent-0.1-py2-none-any.whl
