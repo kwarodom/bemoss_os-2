@@ -88,12 +88,6 @@ def scheduleragent(config_path, **kwargs):
     db_password = settings.DATABASES['default']['PASSWORD']
 
     #4. set exchanged topics between this app and other entities
-    #4.1 exchanged topic app and agent
-    #TODO construct topic_app_agent based on data obtained from the launcher
-    topic_app_agent = '/ui/agent/'+building_name+'/999/'+device_type+'/'+agent_id+'/'+'update'
-
-    #4.2 exchanged topic ui and app
-    #TODO construct topic_ui_app based on data obtained from the launcher
     topic_ui_app = '/ui/app/' + app_name + '/' + agent_id + '/' + 'update'
     topic_app_ui = '/app/ui/' + app_name + '/' + agent_id + '/' + 'update/response'
 
@@ -445,6 +439,15 @@ def scheduleragent(config_path, **kwargs):
                         headers_mod.CONTENT_TYPE: headers_mod.CONTENT_TYPE.JSON,
                     }
                     # case1: only 'status' is changed
+                    self.cur.execute("SELECT current_zone_id FROM node_device WHERE device_id=%s",
+                                     (agent_id,))
+                    if self.cur.rowcount != 0:
+                        zone_id = str(self.cur.fetchone()[0])
+                    else:
+                        zone_id = 999  # default core id TODO this has to be changed
+                    _topic_Agent_UI_tail = building_name + '/' + str(zone_id) + '/' + agent_id
+                    topic_app_agent = '/ui/agent/lighting/update/' + _topic_Agent_UI_tail
+
                     if str(self.brightnessToChange_current) == "None" and str(self.colorToChange_current) == "None":
                         if str(self.statusToChange_current) != "None": #send only status
                             _status_to_publish = str(self.statusToChange_current).upper()

@@ -123,7 +123,7 @@ def ThermostatAgent(config_path, **kwargs):
 
     app_name = "thermostat_scheduler"
     topic_ui_app = '/ui/app/' + app_name + '/' + agent_id + '/' + 'update'  # TODO revise app
-
+    topic_app_ui = '/app/ui/' + app_name + '/' + agent_id + '/' + 'update/response'
     # 4. @params device_api
     api = get_config('api')
     apiLib = importlib.import_module("DeviceAPI.classAPI." + api)
@@ -227,8 +227,19 @@ def ThermostatAgent(config_path, **kwargs):
         def updateScheduleMsgFromUI(self, topic, headers, message, match):
             _data = json.loads(message[0])
             schedule = json.loads(_data['content'])
+            result = 'failure'
             if self.device_supports_schedule:
-                self.updateScheduleToDevice(schedule=schedule)
+                result = self.updateScheduleToDevice(schedule=schedule)
+
+            _headers = {
+                'AppName': app_name,
+                'AgentID': agent_id,
+                headers_mod.CONTENT_TYPE: headers_mod.CONTENT_TYPE.JSON,
+                headers_mod.FROM: agent_id,
+                headers_mod.TO: 'ui'
+            }
+            _message = result
+            self.publish(topic_app_ui, _headers, _message)
 
         def updateScheduleToDevice(self,schedule=None):
 
@@ -256,10 +267,11 @@ def ThermostatAgent(config_path, **kwargs):
                 self.set_variable('scheduleData', newSchedule)
                 Thermostat.setDeviceSchedule(newSchedule)
                 # 3. get currently active schedule
-
+                return 'success'
             except Exception as er:
                 print "Update Schedule to device failed"
                 print er
+                return 'failure'
 
         def updateScheduleFromDevice(self):
 
@@ -440,11 +452,6 @@ def ThermostatAgent(config_path, **kwargs):
                     self.cur.execute("UPDATE "+db_table_thermostat+" SET network_status=%s WHERE thermostat_id=%s",
                                      ('ONLINE', agent_id))
                     self.con.commit()
-
-                # check if there is misoperation in the AC
-                self.cur.execute("SELECT id FROM " + db_table_active_alert + " WHERE event_trigger_id=%s", ('2',))
-                if self.cur.rowcount != 0:
-                    self.device_misoperation_detection()
 
                 # Step: Check if any Device is OFFLINE
                 self.cur.execute("SELECT id FROM " + db_table_active_alert + " WHERE event_trigger_id=%s", ('5',))
@@ -778,22 +785,6 @@ def ThermostatAgent(config_path, **kwargs):
                               str(datetime.datetime.now()), 'Alert', str(self.priority_level)))
             self.con.commit()
 
-            # Find the number of total number notifications sent for the same alert and device
-            self.cur.execute("SELECT id FROM " + db_table_active_alert + " WHERE event_trigger_id=%s", ('2',))
-            if self.cur.rowcount != 0:
-                self.cur.execute(
-                    "SELECT no_notifications_sent FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                    (str(_active_alert_id), agent_id,))
-                if self.cur.rowcount != 0:
-                    self._no_notifications_sent = self.cur.fetchone()[0]
-                    self.con.commit()
-                    print self._no_notifications_sent
-                    self._no_notifications_sent = int(self._no_notifications_sent) + 1
-                    self.cur.execute(
-                        "UPDATE " + db_table_temp_time_counter + " SET no_notifications_sent=%s WHERE alert_id=%s AND device_id=%s",
-                        (str(self._no_notifications_sent), str(_active_alert_id), agent_id,))
-                    self.con.commit()
-
         # TODO refactor this one
         def send_device_notification_db_device(self, device_msg, _active_alert_id):
             print " INSIDE send_device_notification_db_device"
@@ -909,193 +900,6 @@ def ThermostatAgent(config_path, **kwargs):
                     "UPDATE " + db_table_temp_time_counter + " SET priority_counter=%s WHERE alert_id=%s AND device_id=%s",
                     (str(self.priority_count), str(_active_alert_id), agent_id,))
 
-        # Device misoperation detection method
-        def device_misoperation_detection(self):
-            print "INSIDE device_misoperation_detection"
-            self._misoperation_device_msg = "#Attention: BEMOSS Device {}".format(agent_id) + "is not operating"
-            # find the alert id
-            self.cur.execute("SELECT id FROM " + db_table_active_alert + " WHERE event_trigger_id=%s", ('2',))
-            self._active_alert_id = self.cur.fetchone()[0]
-
-            # Find the mis-operation threshold from active alert DB
-            self.cur.execute("SELECT temp_range_threshold FROM " + db_table_active_alert + " WHERE event_trigger_id=%s",
-                             ('2',))
-
-            # if there is mis-operation alert
-            if self.cur.rowcount != 0:
-                self._misoperation_range = self.cur.fetchone()[0]
-                print "The temperature range is"
-                print self._misoperation_range
-                print device_type
-
-                # find the time range  defined for AC failure, defined by the user
-                self.cur.execute(
-                    "SELECT temp_time_threshold FROM " + db_table_active_alert + " WHERE event_trigger_id=%s",
-                    ('2',))
-                self._misoperation_time = self.cur.fetchone()[0]
-
-                # find the number of counts required for the defined time
-                self.con.commit()
-                self.cur.execute("SELECT counter FROM " + db_table_temp_failure_time + " WHERE hours=%s", ('2',))
-                self._misoperation_counter = self.cur.fetchone()[0]
-                print "alert found in active alert table"
-                if self.get_variable('cool_setpoint') != None:
-                    if self.get_variable('temperature') > self.get_variable('cool_setpoint') + int(
-                            self._misoperation_range):
-                        # check the last updated notification method
-                        # if alert does not exit then go to send notification method
-                        # if the alert exit then go to the counter in last updated notification and increase the counter
-                        # if no violation then go to last updated notification and make the counter 0
-                        print "violation detected"
-                        self.cur.execute(
-                            "SELECT id FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                            (str(self._active_alert_id), agent_id,))
-                        # If this is the first detected violation
-                        if self.cur.rowcount == 0:
-                            print "first violation detected"
-                            self.cur.execute(
-                                "INSERT INTO " + db_table_temp_time_counter + " VALUES(DEFAULT,%s,%s,%s,%s,%s)",
-                                (self._active_alert_id, agent_id, '0', '0', '0'))
-                            self.con.commit()
-                        else:
-                            self.cur.execute(
-                                "SELECT temp_time_count FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                                (str(self._active_alert_id), str(agent_id),))
-                            self._temp_failure_counter = self.cur.fetchone()[0]
-                            # if the time counter exceeded the defined counter
-                            if int(self._temp_failure_counter) > int(self._misoperation_counter):
-                                print "the counter reached the limit"
-                                self.priority_counter(self._active_alert_id, self._misoperation_device_msg)
-                                self.cur.execute(
-                                    "SELECT priority_counter FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                                    (str(self._active_alert_id), str(agent_id),))
-                                self._priority_counter = self.cur.fetchone()[0]
-                                print self._priority_counter
-                                self.cur.execute(
-                                    "SELECT no_notifications_sent FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                                    (str(self._active_alert_id), str(agent_id),))
-                                self._no_notifications_sent = self.cur.fetchone()[0]
-                                self.con.commit()
-                                print "no of sent notifications"
-                                print self._no_notifications_sent
-                                print "priority counter"
-                                print self._priority_counter
-                                if int(self._priority_counter) == 1:
-                                    print "passed the priority if statement"
-                                    if int(self._no_notifications_sent) == 0:
-                                        print "passed the no of notifications statement"
-                                        self.send_device_notification_db(self._misoperation_device_msg,
-                                                                         self._active_alert_id)
-                                        self.cur.execute(
-                                            "SELECT notify_address FROM " + db_table_alerts_notificationchanneladdress + " WHERE active_alert_id=%s AND notification_channel_id=%s",
-                                            (self._active_alert_id,'1'))
-                                        # Send email if exist
-                                        if self.cur.rowcount != 0:
-                                            self._tampering_alert_email_misoperation = self.cur.fetchall()
-                                            for single_email_1 in self._tampering_alert_email_misoperation:
-                                                print single_email_1[0]
-                                                self.send_device_notification_email_all(single_email_1[0], self._misoperation_device_msg, self._misoperation_device_msg)
-
-                                        # Send SMS if provided by user
-                                        self.cur.execute(
-                                            "SELECT notify_address FROM " + db_table_alerts_notificationchanneladdress + " WHERE active_alert_id=%s AND notification_channel_id=%s",
-                                            (self._active_alert_id,'2'))
-                                        if self.cur.rowcount != 0:
-                                            self._tampering_alert_sms_misoperation = self.cur.fetchall()
-                                            for single_number_misoperation in self._tampering_alert_sms_misoperation:
-                                                print single_number_misoperation[0]
-                                                self.send_device_notification_sms(single_number_misoperation[0])
-
-                            else:
-                                # Increase the counter by one
-                                self._temp_failure_counter = int(self._temp_failure_counter) + 1
-
-                                # Push the new counter to the DB
-                                self.cur.execute(
-                                    "UPDATE " + db_table_temp_time_counter + " SET temp_time_count=%s WHERE alert_id=%s AND device_id=%s",
-                                    (self._temp_failure_counter, str(self._active_alert_id), agent_id,))
-                                self.con.commit()
-                    else:
-                        print "Cool set point is under the defined range"
-
-                # Check the heat set point and compare it with current temperature
-                if self.get_variable('heat_setpoint') != None:
-                    if self.get_variable('temperature') < self.get_variable('heat_setpoint') + int(
-                            self._misoperation_range):
-                        # check the last updated notification method
-                        # if alert does not exit then go to send notification method
-                        # if the alert exit then go to the counter in last updated notification and increase the counter
-                        # if no violation then go to last updated notification and make the counter 0
-                        print "violation detected"
-                        self.cur.execute(
-                            "SELECT id FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                            (str(self._active_alert_id), agent_id,))
-                        # If this is the first detected violation
-                        if self.cur.rowcount == 0:
-                            print "first violation detected"
-                            self.cur.execute(
-                                "INSERT INTO " + db_table_temp_time_counter + " VALUES(DEFAULT,%s,%s,%s,%s,%s)",
-                                (self._active_alert_id, agent_id, '0', '0', '0'))
-                            self.con.commit()
-                        else:
-                            self.cur.execute(
-                                "SELECT temp_time_count FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                                (str(self._active_alert_id), str(agent_id),))
-                            self._temp_failure_counter = self.cur.fetchone()[0]
-                            # if the time counter exceeded the defined counter
-                            if int(self._temp_failure_counter) > int(self._misoperation_counter):
-                                print "the counter reached the limit"
-                                self.priority_counter(self._active_alert_id, self._misoperation_device_msg)
-                                self.cur.execute(
-                                    "SELECT priority_counter FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                                    (str(self._active_alert_id), str(agent_id),))
-                                self._priority_counter = self.cur.fetchone()[0]
-                                print self._priority_counter
-                                self.cur.execute(
-                                    "SELECT no_notifications_sent FROM " + db_table_temp_time_counter + " WHERE alert_id=%s AND device_id=%s",
-                                    (str(self._active_alert_id), str(agent_id),))
-                                self._no_notifications_sent = self.cur.fetchone()[0]
-                                self.con.commit()
-                                print "no of sent notifications"
-                                print self._no_notifications_sent
-                                print "priority counter"
-                                print self._priority_counter
-                                if int(self._priority_counter) == 1:
-                                    print "passed the priority if statment"
-                                    if int(self._no_notifications_sent) == 0:
-                                        print "passed the no of notifications statement"
-                                        self.send_device_notification_db(self._misoperation_device_msg,
-                                                                         self._active_alert_id)
-                                        self.cur.execute(
-                                            "SELECT notify_address FROM " + db_table_alerts_notificationchanneladdress + " WHERE active_alert_id=%s AND notification_channel_id=%s",
-                                            (self._active_alert_id,'1'))
-                                        # Send email if exist
-                                        if self.cur.rowcount != 0:
-                                            self._tampering_alert_email_misoperation = self.cur.fetchall()
-                                            for single_email_1 in self._tampering_alert_email_misoperation:
-                                                print single_email_1[0]
-                                                self.send_device_notification_email_all(single_email_1[0], self._misoperation_device_msg, self._misoperation_device_msg)
-
-                                        # Send SMS if provided by user
-                                        self.cur.execute(
-                                            "SELECT notify_address FROM " + db_table_alerts_notificationchanneladdress + " WHERE active_alert_id=%s AND notification_channel_id=%s",
-                                            (self._active_alert_id,'2'))
-                                        if self.cur.rowcount != 0:
-                                            self._tampering_alert_sms_misoperation = self.cur.fetchall()
-                                            for single_number_misoperation in self._tampering_alert_sms_misoperation:
-                                                print single_number_misoperation[0]
-                                                self.send_device_notification_sms(single_number_misoperation[0])
-                            else:
-                                # Increase the counter by one
-                                self._temp_failure_counter = int(self._temp_failure_counter) + 1
-
-                                # Push the new counter to the DB
-                                self.cur.execute(
-                                    "UPDATE " + db_table_temp_time_counter + " SET temp_time_count=%s WHERE alert_id=%s AND device_id=%s",
-                                    (self._temp_failure_counter, str(self._active_alert_id), agent_id,))
-                                self.con.commit()
-                    else:
-                        print "Heat set point is under the defined range"
 
         def device_tampering_detection(self):
             allowance = 0

@@ -50,8 +50,6 @@ cd ~/workspace/bemoss_os/
 #sleep 2
 volttron-ctl start --tag applauncheragent
 sleep 2
-#volttron-ctl start --tag iebsubscriberagent
-#sleep 2
 #volttron-ctl start --tag approvalhelperagent
 #sleep 2
 volttron-ctl start --tag multibuildingagent

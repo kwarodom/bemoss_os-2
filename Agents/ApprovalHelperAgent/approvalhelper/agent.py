@@ -186,25 +186,6 @@ def ApprovalHelperAgent(config_path, **kwargs):
             infile.close()
             return agent_still_running
 
-        def publish_subtopic(self, publish_item, topic_prefix):
-            #TODO: Update to use the new topic templates
-            if type(publish_item) is dict:
-                # Publish an "all" property, converting item to json
-
-                headers[headers_mod.CONTENT_TYPE] = headers_mod.CONTENT_TYPE.JSON
-                self.publish_json(topic_prefix + '/' + "all", headers, json.dumps(publish_item))
-                print "WiFiTherAgent got"+str(type(publish_item))
-                os.system("date");
-                # Loop over contents, call publish_subtopic on each
-                for topic in publish_item.keys():
-                    self.publish_subtopic(publish_item[topic], topic_prefix + '/' + topic)
-
-            else:
-                # Item is a scalar type, publish it as is
-                headers[headers_mod.CONTENT_TYPE] = headers_mod.CONTENT_TYPE.PLAIN_TEXT
-                self.publish(topic_prefix, headers, str(publish_item))
-                print "Topic:{topic}={message}".format(topic=topic_prefix,message=str(publish_item))
-
         @matching.match_exact('/ui/agent/misc/bemoss/approvalhelper_get_hue_username')
         def get_hue_username(self, topic, headers, message, match):
             print "ApprovalHelperAgent got\nTopic: {topic}".format(topic=topic)

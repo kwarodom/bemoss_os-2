@@ -427,10 +427,6 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
             #check the replied node status in database
             reply_node_mac = self.multi_node_data['hosts'][replied_node]['mac_address']
-            self.cur.execute("UPDATE "+db_table_node_info+" SET node_status=(%s),last_scanned_time=(%s)"
-                                 "WHERE mac_address=(%s)",
-                                 ("ONLINE", datetime.datetime.now(), reply_node_mac))
-            self.con.commit()
 
             self.cur.execute("SELECT node_status, associated_zone FROM "+db_table_node_info+" WHERE mac_address=%s",
                              (reply_node_mac,))
@@ -440,6 +436,11 @@ class NetworkAgent(PublishMixin, BaseAgent):
                 replied_node_zone_id = int(row[1])
             else:
                 continue
+
+            self.cur.execute("UPDATE "+db_table_node_info+" SET node_status=(%s),last_scanned_time=(%s)"
+                                 "WHERE mac_address=(%s)",
+                                 ("ONLINE", datetime.datetime.now(), reply_node_mac))
+            self.con.commit()
 
             if replied_node_old_status == "OFFLINE": #this means it recently became online
                 #recently online node. Transfer back the agents
@@ -475,7 +476,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
                                                               "last_offline_time=(%s) WHERE mac_address=(%s)",
                                  ("OFFLINE", datetime.datetime.now(), datetime.datetime.now(), not_reply_node_mac))
                 self.con.commit()
-                continue #NOTHING more TO BE done on this node
+                not_replied_node_status = "OFFLINE"
 
             if not_replied_node_status != "OFFLINE":
                 continue #node status must be OFFLINE if not online

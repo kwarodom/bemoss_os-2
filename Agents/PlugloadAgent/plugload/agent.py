@@ -500,8 +500,8 @@ def PlugloadAgent(config_path, **kwargs):
             if states is not None:
                 print "got state change:",states
                 self.changed_variables = dict()
-                if(self.get_variable('status') != 'ON' if states['status']==1 else 'Off'):
-                    self.set_variable('status','ON' if states['status']==1 else 'Off')
+                if(self.get_variable('status') != 'ON' if states['status']==1 else 'OFF'):
+                    self.set_variable('status','ON' if states['status']==1 else 'OFF')
                     self.changed_variables['status'] = log_variables['status']
                 if 'power' in states:
                     if(self.get_variable('power') != states['power']):
