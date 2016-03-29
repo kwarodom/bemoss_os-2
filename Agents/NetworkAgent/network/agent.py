@@ -227,7 +227,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
 
 
         # 2. gather information for multi-node sending
-        message = {'path':destination_file_path,'b64encoded_content':base64.b64encode(file_content)}
+        message = {'path':destination_file_path,'b64encoded_content':base64.b64encode(file_content),'node_location':self.host_location}
         node_location = new_zone_building_name+'/'+"".join(new_zone_device_mac.split(':'))
         topic_to_send = 'building/send/'+node_location+'/file_move'
         print "{}: send file {} to nodes".format(self.agent_id, source_file_path)
@@ -259,16 +259,11 @@ class NetworkAgent(PublishMixin, BaseAgent):
         if debug_agent:
             print "{} >> device to stop is {}".format(self.agent_id, agent_id)
 
-        _launch_file_path = os.path.join(Agents_Launch_DIR+agent_id+".launch.json")
-        with open(_launch_file_path, 'r') as f:
-            launch_file_to_move = json.load(f)
-
-        agent_id = launch_file_to_move['agent_id']
         node_location = new_zone_building_name+'/'+"".join(new_zone_device_mac.split(':'))
         topic_to_send = 'building/send/'+node_location+'/device_stop'
         if debug_agent:
             print "{} send topic {} to stop device".format(self.agent_id, topic_to_send)
-        message_to_send = launch_file_to_move
+        message_to_send = {'agent_id':agent_id,'node_location':self.host_location}
         self.publish_multi_node(topic_to_send, message_to_send)
 
     def sendStartAgentRequest(self,to_start_agent_id,new_zone_id):
@@ -304,6 +299,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
             launch_file_to_move['zone_id'] = new_zone_id
             #change building_name in launch file to move
             launch_file_to_move['building_name'] = new_zone_building_name
+            launch_file_to_move['node_location'] = self.host_location
 
         #gather information for multi-node sending
         agent_id = launch_file_to_move['agent_id']
@@ -392,19 +388,22 @@ class NetworkAgent(PublishMixin, BaseAgent):
             _launch_file = os.path.join(Agents_DIR+"MultiBuilding/multibuildingagent.launch.json")
             with open(_launch_file, 'r') as f:
                 self.multi_node_data = json.load(f)
-            self.connected_nodes = list()
+            nodelist = list()
             for k, v in self.multi_node_data['hosts'].items():
                 if self.multi_node_data['hosts'][k]['type'] == "core":
                     pass
                 else:
-                    self.connected_nodes.append(k)
+                    nodelist.append(k)
+            self.connected_nodes = nodelist
+
             for node_location in self.connected_nodes:
                 if debug_agent:
                     print 'connected nodes = {}'.format(len(self.connected_nodes))
                     print 'node_location ' + node_location
                 topic_to_send = 'building/send/'+node_location+'/check_status'
-                message_to_send = "check status"
+                message_to_send = {'message':"check status",'node_location':self.host_location}
                 self.publish_multi_node(topic_to_send, message_to_send)
+
 
 
     @periodic(node_monitor_time)
@@ -727,8 +726,24 @@ class NetworkAgent(PublishMixin, BaseAgent):
             print "Topic: {topic}".format(topic=topic)
             print "Headers: {headers}".format(headers=headers)
             print "Message: {message}\n".format(message=message)
-        command = topic.split("/")[4]
-        data = json.loads(message[0])
+
+        try:
+            command = topic.split("/")[4]
+            data = json.loads(message[0])
+            response_node = data['node_location']
+
+        except TypeError:
+            print 'Wrong message format:'
+            print "Topic: {topic}".format(topic=topic)
+            print "Headers: {headers}".format(headers=headers)
+            print "Message: {message}\n".format(message=message)
+            return
+
+        if response_node not in self.connected_nodes:
+            if debug_agent:
+                print 'Got message from stranger node: '+response_node
+            return
+
         if command == "device_move":
             agent_id = data['agent_id']
             _launch_file = os.path.join(Agents_Launch_DIR+agent_id+".launch.json")
@@ -751,7 +766,6 @@ class NetworkAgent(PublishMixin, BaseAgent):
                 print "check_status_response"
                 print "Message: {message}".format(message=message)
             response_status = data['status']
-            response_node = data['node_location']
             if response_node not in self.received_nodes_status_reply and response_status == "ONLINE":
                 self.received_nodes_status_reply.append(response_node)
         elif command == "ui_agent":
@@ -833,6 +847,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
                 # _message = json.loads(message)
                 _message = message[0]
                 message_to_send = {
+                                    "node_location": self.host_location,
                                     "topic": topic,
                                     # "headers": str(headers),
                                     "message": _message
@@ -885,6 +900,7 @@ class NetworkAgent(PublishMixin, BaseAgent):
                             # _message = json.loads(message)
                             _message = message[0]
                             message_to_send = {
+                                                "node_location":self.host_location,
                                                 "topic": topic,
                                                 # "headers": str(headers),
                                                 "message": _message
@@ -927,7 +943,8 @@ class NetworkAgent(PublishMixin, BaseAgent):
             message_to_send = {
                                 "topic": topic,
                                 # "headers": str(headers),
-                                "message": _message
+                                "message": _message,
+                                "node_location":self.host_location
                                }
             self.publish_multi_node(topic_to_send, message_to_send)
         else:
