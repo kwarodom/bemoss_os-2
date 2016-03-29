@@ -210,14 +210,18 @@ else:
     pass
 
 #7. check and confirm zone id:999 (unassigned for newly discovered devices) is in table
+core_name = settings.PLATFORM['node']['name']
 cur.execute("SELECT zone_id FROM "+db_table_building_zone+" WHERE zone_id=999")
 if cur.rowcount == 0:
-    cur.execute("INSERT INTO "+db_table_building_zone+" VALUES(%s, %s)", (999, "BEMOSS Core"))
+    cur.execute("INSERT INTO "+db_table_building_zone+" VALUES(%s, %s)", (999, core_name))
     conn.commit()
-    print "{} >> Done 7: default columns zone_id 999 and zone_nickname BEMOSS Core " \
+    print "{} >> Done 7: default columns zone_id 999 and load zone_nickname from settings file. " \
           "is inserted into {} successfully".format(agent_id, db_table_building_zone)
 else:
-    print "{} >> Warning: default zone 999 already exists".format(agent_id)
+    # Update zone nickname from default value set in ui side.
+    cur.execute("UPDATE "+db_table_building_zone+" SET zone_nickname="+core_name+" WHERE zone_id=999")
+    conn.commit()
+    print "{} >> Warning: default zone 999 already exists, zone_nickname updated".format(agent_id)
 
 #7. check and confirm zone id:999 (BEMOSS Core for newly discovered devices) is in table
 cur.execute("SELECT id FROM "+db_table_global_zone_setting+" WHERE zone_id=%s", (999,))
