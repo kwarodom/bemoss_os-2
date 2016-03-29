@@ -123,7 +123,7 @@ def ThermostatAgent(config_path, **kwargs):
 
     app_name = "thermostat_scheduler"
     topic_ui_app = '/ui/app/' + app_name + '/' + agent_id + '/' + 'update'  # TODO revise app
-
+    topic_app_ui = '/app/ui/' + app_name + '/' + agent_id + '/' + 'update/response'
     # 4. @params device_api
     api = get_config('api')
     apiLib = importlib.import_module("DeviceAPI.classAPI." + api)
@@ -227,8 +227,19 @@ def ThermostatAgent(config_path, **kwargs):
         def updateScheduleMsgFromUI(self, topic, headers, message, match):
             _data = json.loads(message[0])
             schedule = json.loads(_data['content'])
+            result = 'failure'
             if self.device_supports_schedule:
-                self.updateScheduleToDevice(schedule=schedule)
+                result = self.updateScheduleToDevice(schedule=schedule)
+
+            _headers = {
+                'AppName': app_name,
+                'AgentID': agent_id,
+                headers_mod.CONTENT_TYPE: headers_mod.CONTENT_TYPE.JSON,
+                headers_mod.FROM: agent_id,
+                headers_mod.TO: 'ui'
+            }
+            _message = result
+            self.publish(topic_app_ui, _headers, _message)
 
         def updateScheduleToDevice(self,schedule=None):
 
@@ -256,10 +267,11 @@ def ThermostatAgent(config_path, **kwargs):
                 self.set_variable('scheduleData', newSchedule)
                 Thermostat.setDeviceSchedule(newSchedule)
                 # 3. get currently active schedule
-
+                return 'success'
             except Exception as er:
                 print "Update Schedule to device failed"
                 print er
+                return 'failure'
 
         def updateScheduleFromDevice(self):
 
