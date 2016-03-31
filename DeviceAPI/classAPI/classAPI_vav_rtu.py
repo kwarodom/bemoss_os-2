@@ -82,8 +82,20 @@ class API:
     '''
     Attributes:
     ------------------------------------------------------------------------------------------
-    Dimmer       GET    POST   Dim level percent (0-100) : 0 means OFF
-    Current	     GET	       Current consumption
+    temperature               GET           temperature reading (floating point in deg F)
+    heat_setpoint             GET    POST   target heat setpoint (floating point in deg F)
+    cool_setpoint             GET    POST   target cool setpoint (floating point in deg F)
+    supply_temperature        GET           RTU supply temperature (floating point in deg F)
+    return_temperature        GET           RTU supply temperature (floating point in deg F)
+    flap_override             GET    POST   flap override('ON'/'OFF')
+    flap_position             GET    POST   flap position, int
+    outside_temperature       GET           outside temperature from RTU sensor (floating point in deg F)
+    pressure                  GET           presure
+    outside_damper_position   GET    POST   outside damper position, int
+    bypass_damper_position    GET    POST   outside damper position, int
+    fan_status                GET    POST   RTU fan status('ON'/'OFF')
+    cooling_status            GET    POST   RTU cooling status('ON'/'OFF')
+    cooling_mode              GET    POST   RTU cooling mode('None'/'STG1'/'STG2')
     ------------------------------------------------------------------------------------------
     '''
 

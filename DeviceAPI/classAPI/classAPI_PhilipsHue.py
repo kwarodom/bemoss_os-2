@@ -70,7 +70,14 @@ class API:
 
     # 2. Attributes from Attributes table
     '''
-    Attributes: 
+    Attributes:
+     ------------------------------------------------------------------------------------------
+    status            GET    POST      Philips Hue ON/OFF status
+    brightness        GET    POST      brightness percentage
+    effect            GET    POST      Hue light effect 'none' or 'colorloop'
+    color             GET    POST      temporary target heat setpoint (floating point in deg F)
+     ------------------------------------------------------------------------------------------
+
     ''' 
 
     # 3. Capabilites (methods) from Capabilities table

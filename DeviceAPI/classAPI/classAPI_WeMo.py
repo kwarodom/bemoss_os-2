@@ -46,7 +46,7 @@ under Contract DE-EE0006352
 #__lastUpdated__ = "2016-03-14 11:23:33"
 '''
 
-'''This API8 class is for an agent that want to communicate/monitor/control
+'''This API class is for an agent that want to communicate/monitor/control
 devices that compatible with WeMo API'''
 
 import re
@@ -106,7 +106,7 @@ def keepListening(threadingLock, address, port, callback):
 
 class API:
     # 1. constructor : gets call every time when create a new class
-    # requirements for instantiation1. model, 2.type, 3.api, 4. address
+    # requirements for instantiation1. model, 2.api, 3. address
     def __init__(self,**kwargs):  # default color is white
         # Initialized common attributes
         self.variables = kwargs
@@ -114,6 +114,26 @@ class API:
         self.set_variable('connection_renew_interval',600)
         self.listeningThread = None
         self.set_variable('offline_count',0)
+
+
+    # Attributes from Attributes table
+    '''
+    Attributes:
+     ------------------------------------------------------------------------------------------
+    WeMo Plug
+    status       GET    POST      Smart plug ON/OFF status
+    power        GET    POST      WeMo Insigth power consumption (float point in Watt)
+     ------------------------------------------------------------------------------------------
+
+    '''
+
+    #Capabilites (methods) from Capabilities table
+    '''
+    API3 available methods:
+    1. getDeviceStatus() GET
+    2. setDeviceStatus(postmsg) PUT
+    3. identifyDevice()
+    '''
 
     # These set and get methods allow scalability
     def startListeningEvents(self,threadingLock,callback):
@@ -223,11 +243,6 @@ class API:
             body="<?xml version='1.0' encoding='utf-8'?><s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'><s:Body><u:GetBinaryState xmlns:u='urn:Belkin:service:basicevent:1'></u:GetBinaryState></s:Body></s:Envelope>"
             controlUrl=self.get_variable('address')+'/upnp/control/basicevent1'
 
-        elif self.get_variable("model") == "Sensor":
-            SOAPACTION = '"urn:Belkin:service:basicevent:1#GetBinaryState"'
-            body="<?xml version='1.0' encoding='utf-8'?><s:Envelope xmlns:s='http://schemas.xmlsoap.org/soap/envelope/' s:encodingStyle='http://schemas.xmlsoap.org/soap/encoding/'><s:Body><u:GetBinaryState xmlns:u='urn:Belkin:service:basicevent:1'></u:GetBinaryState></s:Body></s:Envelope>"
-            controlUrl=self.get_variable('address')+'/upnp/control/basicevent1'
-
         else:
             "{0}Agent : currently Wemo device model {1} is not supported by BEMOSS".format(self.variables.get('agent_id',None),self.get_variable("model"))
             return
@@ -260,11 +275,6 @@ class API:
                 elif int(dom.getElementsByTagName('BinaryState')[0].firstChild.data) == 1|True:
                     self.set_variable('status',"ON")
 
-            elif self.get_variable("model") == "Sensor":
-                if int(dom.getElementsByTagName('BinaryState')[0].firstChild.data) == 0|False:
-                    self.set_variable('motion',False)
-                elif int(dom.getElementsByTagName('BinaryState')[0].firstChild.data) == 1|True:
-                    self.set_variable('motion',True)
             else:
                 "{0}Agent : currently Wemo device model {1} is not supported by BEMOSS".format(self.variables.get('agent_id',None),self.get_variable("model"))
             if self.debug: self.printDeviceStatus()
@@ -360,7 +370,7 @@ class API:
 def main():
     # Test Codes
 
-    WeMoSwitch = API(model='Sensor', type='motion_sensor', api='classAPI_WeMo', address='http://192.168.10.159:49153', agent_id='motionsensoragent')
+    WeMoSwitch = API(model='Insight', api='classAPI_WeMo', address='http://192.168.10.159:49153', agent_id='plugloadagent')
     # Find device Model
     # print WeMoSwitch.getDeviceModel()
     # Get and Print Device Status
