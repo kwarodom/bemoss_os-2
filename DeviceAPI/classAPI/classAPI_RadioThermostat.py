@@ -81,7 +81,7 @@ class API:
     '''
     Attributes: 
     GET: temp, override, tstate, fstate, t_type_post
-    GET/POST: time=[day, hour, minute], tmode, t_heat, t_cool, fmode, hold
+    GET/POST: time=[day, hour, minute], tmode, t_heat, t_cool, fmode, hold, scheduleData
     POST: energy_led 
     ------------------------------------------------------------------------------------------
     temp            GET              current temp(deg F)
@@ -96,9 +96,15 @@ class API:
     .cool setpoint (floating point in deg F)
     fmode           GET    POST      fan operating mode (0:AUTO,1:AUTO/CIRCULATE,2:ON)
     hold            GET    POST      target temp hold status (0:disabled, 1:enabled)
+    scheduleData*   GET    POST      thermostat's schedule data.
     energy_led             POST      energy LED status code (0:OFF,1:Green,2:Yellow,4:Red) 
     ------------------------------------------------------------------------------------------ 
-    ''' 
+
+    *For schedule data, the format is:
+     {'Enabled': True, 'monday':[['nickname', mintues , cool_setpoint, heat_setpoint],['nickname',minutes, ... ]], 'tuesday':[['nickname',...]]}
+    Radio Thermostat supports 4 nicknames: 'Morning', 'Day', 'Evening' and 'Night'.
+
+    '''
 
     # 3. Capabilites (methods) from Capabilities table
     '''
@@ -106,7 +112,9 @@ class API:
     1. getDeviceModel(url) GET
     2. getDeviceStatus(url) GET
     3. setDeviceStatus(url, postmsg) POST
-    4. identifyDevice(url, idenmsg) POST
+    4. getDeviceSchedule(url) GET
+    5. setDeviceSchedule(url, scheduleData) POST
+    6. identifyDevice(url, idenmsg) POST
     '''    
     # GET Open the URL and obtain a model number of a device
     def getDeviceModel(self):
@@ -228,6 +236,10 @@ class API:
         else:
             print(" Invalid value for fan_state")
         # 6. Follow Schedule/Temporary Hold/Permanent Hold
+        # Attention: On Radio Thermostat device, there can be 'HOLD', 'Temperory' two kinds of hold and
+        # following schedule three states. However, on their API, there is only HOLD 0/1. When device is
+        # temperory hold, API still return same as no hold:0. Here we are doing some transition:
+        # we define Permanent hold as 2, temperory hold as 1, following schedule as 0.
         if _theJSON["hold"] == 1:
             self.set_variable('hold', 2)
         else:
