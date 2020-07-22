@@ -113,16 +113,16 @@ def discover(type):
                     client = ModbusTcpClient(ip,port=502)
                     client.connect()
                     if type == 'Prolon_VAV':
-                        possible_slave_ids = [1,2,7]
+                        possible_subordinate_ids = [1,2,7]
                     elif type == 'Prolon_RTU':
-                        possible_slave_ids = [15,20]
+                        possible_subordinate_ids = [15,20]
                     else:
-                        possible_slave_ids = []
+                        possible_subordinate_ids = []
 
-                    for slave_id in possible_slave_ids:
-                            result = client.read_input_registers(0,unit=slave_id)
+                    for subordinate_id in possible_subordinate_ids:
+                            result = client.read_input_registers(0,unit=subordinate_id)
                             if result is not None:
-                                responses.append(ip+':'+str(slave_id))
+                                responses.append(ip+':'+str(subordinate_id))
 
                     client.close()
             except:
