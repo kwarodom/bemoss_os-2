@@ -63,7 +63,7 @@ class API:
         self.variables = kwargs
         address_parts = self.get_variable('address').split(':')
         self.set_variable('address',address_parts[0])
-        self.set_variable('slave_id',int(address_parts[1]))
+        self.set_variable('subordinate_id',int(address_parts[1]))
         self.set_variable('offline_count',0)
         self.set_variable('connection_renew_interval',6000) #nothing to renew
 
@@ -115,7 +115,7 @@ class API:
             client = ModbusTcpClient(self.get_variable('address'),port=502)
             client.connect()
             if (self.get_variable('model')=='VC1000'):
-                result = client.read_input_registers(0,8,unit=self.get_variable('slave_id'))
+                result = client.read_input_registers(0,8,unit=self.get_variable('subordinate_id'))
                 if int(result.registers[0])==32767:
                     self.set_variable('temperature',None)
                 else:
@@ -126,14 +126,14 @@ class API:
                     self.set_variable('supply_temperature',None)
                 else:
                     self.set_variable('supply_temperature',float('%.1f' % self.cel2far(float(int(result.registers[7]))/100.0)))
-                result = client.read_holding_registers(159,2,unit=self.get_variable('slave_id'))
+                result = client.read_holding_registers(159,2,unit=self.get_variable('subordinate_id'))
                 if (int(result.registers[0])==1):
                     self.set_variable('flap_override','ON')
                 else:
                     self.set_variable('flap_override','OFF')
                 self.set_variable('flap_position',int(result.registers[1]))
             elif (self.get_variable('model')=='M1000'):
-                result = client.read_input_registers(0,26,unit=self.get_variable('slave_id'))
+                result = client.read_input_registers(0,26,unit=self.get_variable('subordinate_id'))
                 if int(result.registers[18])==32767:
                     self.set_variable('temperature',None)
                 else:
@@ -163,12 +163,12 @@ class API:
                     self.set_variable('fan_status','ON')
                 else:
                     self.set_variable('fan_status','OFF')
-                result = client.read_holding_registers(129,1,unit=self.get_variable('slave_id'))
+                result = client.read_holding_registers(129,1,unit=self.get_variable('subordinate_id'))
                 if int(result.registers[0]) > 100:
                     self.set_variable('heating',0)
                 else:
                     self.set_variable('heating',int(result.registers[0]))
-                result = client.read_holding_registers(10,1,unit=self.get_variable('slave_id'))
+                result = client.read_holding_registers(10,1,unit=self.get_variable('subordinate_id'))
                 if int(result.registers[0]) == 0:
                     self.set_variable('cooling_mode','None')
                     self.set_variable('cooling_status','OFF')
@@ -216,48 +216,48 @@ class API:
             client.connect()
             if (self.get_variable('model')=='VC1000'):
                 if 'heat_setpoint' in postmsg.keys():
-                    client.write_register(6,int(self.far2cel(float(postmsg.get('heat_setpoint')))*100.0),unit=self.get_variable('slave_id'))
+                    client.write_register(6,int(self.far2cel(float(postmsg.get('heat_setpoint')))*100.0),unit=self.get_variable('subordinate_id'))
                 if 'cool_setpoint' in postmsg.keys():
-                    client.write_register(6,int(self.far2cel(float(postmsg.get('cool_setpoint')))*100.0),unit=self.get_variable('slave_id'))
+                    client.write_register(6,int(self.far2cel(float(postmsg.get('cool_setpoint')))*100.0),unit=self.get_variable('subordinate_id'))
                 if 'flap_override' in postmsg.keys():
                     if postmsg.get('flap_override') == 'ON' or postmsg.get('flap_override') == True:
-                        client.write_register(159,1,unit=self.get_variable('slave_id'))
+                        client.write_register(159,1,unit=self.get_variable('subordinate_id'))
                     elif postmsg.get('flap_override') == 'OFF' or postmsg.get('flap_override') == False:
-                        client.write_register(159,0,unit=self.get_variable('slave_id'))
+                        client.write_register(159,0,unit=self.get_variable('subordinate_id'))
                 if 'flap_position' in postmsg.keys():
-                    client.write_register(160,int(postmsg.get('flap_position')),unit=self.get_variable('slave_id'))
+                    client.write_register(160,int(postmsg.get('flap_position')),unit=self.get_variable('subordinate_id'))
             elif (self.get_variable('model')=='M1000'):
                 if 'heat_setpoint' in postmsg.keys():
-                    client.write_register(187,int(self.far2cel(float(postmsg.get('heat_setpoint')))*100.0),unit=self.get_variable('slave_id'))
+                    client.write_register(187,int(self.far2cel(float(postmsg.get('heat_setpoint')))*100.0),unit=self.get_variable('subordinate_id'))
                 if 'cool_setpoint' in postmsg.keys():
-                    client.write_register(188,int(self.far2cel(float(postmsg.get('cool_setpoint')))*100.0),unit=self.get_variable('slave_id'))
+                    client.write_register(188,int(self.far2cel(float(postmsg.get('cool_setpoint')))*100.0),unit=self.get_variable('subordinate_id'))
                 if 'outside_damper_position' in postmsg.keys():
-                    client.write_register(274,int(postmsg.get('outside_damper_position')),unit=self.get_variable('slave_id'))
+                    client.write_register(274,int(postmsg.get('outside_damper_position')),unit=self.get_variable('subordinate_id'))
                 if 'bypass_damper_position' in postmsg.keys():
-                    client.write_register(275,int(postmsg.get('bypass_damper_position')),unit=self.get_variable('slave_id'))
+                    client.write_register(275,int(postmsg.get('bypass_damper_position')),unit=self.get_variable('subordinate_id'))
                 if 'fan_status' in postmsg.keys():
                     if postmsg.get('fan_status') == 'ON' or postmsg.get('fan_status') == True:
-                        client.write_register(130,2,unit=self.get_variable('slave_id'))
+                        client.write_register(130,2,unit=self.get_variable('subordinate_id'))
                     elif postmsg.get('fan_status') == 'OFF' or postmsg.get('fan_status') == False:
-                        client.write_register(130,1,unit=self.get_variable('slave_id'))
+                        client.write_register(130,1,unit=self.get_variable('subordinate_id'))
                 if 'cooling_status' in postmsg.keys():
                     if postmsg.get('cooling_status') == 'ON':
-                        client.write_registers(124,[1,2,2,2],unit=self.get_variable('slave_id'))
+                        client.write_registers(124,[1,2,2,2],unit=self.get_variable('subordinate_id'))
                     elif postmsg.get('cooling_status') == 'OFF':
-                        client.write_registers(124,[0,1,1,1],unit=self.get_variable('slave_id'))
+                        client.write_registers(124,[0,1,1,1],unit=self.get_variable('subordinate_id'))
                 if 'cooling_mode' in postmsg.keys():
                     if postmsg.get('cooling_mode') == 'None':
-                        client.write_register(10,0,unit=self.get_variable('slave_id'))
+                        client.write_register(10,0,unit=self.get_variable('subordinate_id'))
                     elif postmsg.get('cooling_mode') == 'STG1':
-                        client.write_register(10,1,unit=self.get_variable('slave_id'))
+                        client.write_register(10,1,unit=self.get_variable('subordinate_id'))
                     elif postmsg.get('cooling_mode') == 'STG2':
-                        client.write_register(10,2,unit=self.get_variable('slave_id'))
+                        client.write_register(10,2,unit=self.get_variable('subordinate_id'))
                     elif postmsg.get('cooling_mode') == 'STG3':
-                        client.write_register(10,3,unit=self.get_variable('slave_id'))
+                        client.write_register(10,3,unit=self.get_variable('subordinate_id'))
                     elif postmsg.get('cooling_mode') == 'STG4':
-                        client.write_register(10,4,unit=self.get_variable('slave_id'))
+                        client.write_register(10,4,unit=self.get_variable('subordinate_id'))
                 if 'heating' in postmsg.keys():
-                    client.write_register(129,int(postmsg.get('heating')),unit=self.get_variable('slave_id'))
+                    client.write_register(129,int(postmsg.get('heating')),unit=self.get_variable('subordinate_id'))
             client.close()
 
         except:
